@@ -18,8 +18,21 @@ export async function execute(interaction) {
 
   await interaction.deferReply();
 
-  const res = await getData();
-  if (!res) await interaction.editReply("oops, try executing the command again.");
+  let res;
+  try {
+    res = await getData();
+  } catch (e) {
+    console.error(e);
+    global.gameOngoing[interaction.channel.id] = false;
+    await interaction.editReply("oops, try executing the command again.");
+    return;
+  }
+  if (!res) {
+    console.error(e);
+    global.gameOngoing[interaction.channel.id] = false;
+    await interaction.editReply("oops, try executing the command again.");
+    return;
+  };
   const { origFile, embed, answer, splash } = res;
   let file = res.file;
   await interaction.editReply({ embeds: [embed], files: [file] });
@@ -76,6 +89,7 @@ export async function execute(interaction) {
     } catch (error) {
       console.error(error);
       global.gameOngoing[interaction.channel.id] = false;
+      collector.stop("error");
       await message.reply(`<@${process.env.OWNER_ID}> help`);
     }
   });
