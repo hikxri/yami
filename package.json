@@ -1,0 +1,26 @@
+{
+  "name": "yami",
+  "module": "src/main.js",
+  "type": "module",
+  "devDependencies": {
+    "@eslint/js": "^9.19.0",
+    "@types/bun": "latest",
+    "eslint": "^9.19.0",
+    "globals": "^15.14.0"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "dedent": "^1.5.3",
+    "discord.js": "^14.17.3",
+    "dotenv": "^16.4.7",
+    "jsdom": "^26.0.0",
+    "ollama": "^0.5.12",
+    "openai": "^4.83.0",
+    "sharp": "^0.33.5"
+  },
+  "scripts": {
+    "lint": "eslint --ext .js --ignore-path .gitignore ."
+  }
+}
