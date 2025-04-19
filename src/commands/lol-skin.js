@@ -12,6 +12,9 @@ export const data = new SlashCommandBuilder()
   .setName("lol-skin")
   .setDescription("guess the league of legends character from the skin");
 
+// temporary
+const AUTO_HINT = true;
+
 export async function execute(interaction) {
   if (global.gameOngoing[interaction.channel.id]) {
     await interaction.reply({
@@ -44,6 +47,7 @@ export async function execute(interaction) {
   let file = res.file;
   await interaction.editReply({ embeds: [embed], files: [file] });
   let winner = null;
+  let answerCount = 0;
 
   console.log(answer);
 
@@ -74,21 +78,30 @@ export async function execute(interaction) {
         msg.includes(answer.skin.toLowerCase()) ||
         answer.set.map((s) => s.toLowerCase()).includes(msg.toLowerCase())
       ) {
+        answerCount++;
         message.react("🟨");
       } else if (msg.startsWith("maxhint")) {
         file = origFile;
         await message.reply({ files: [file] });
-      } else if (msg.includes("hint") && msg.startsWith("hint")) {
+      } else if ((msg.includes("hint") && msg.startsWith("hint"))) {
         const hintCount = (msg.match(new RegExp("hint", "g")) || []).length;
+        await replyWithHint(hintCount);
+      } else if (msg === "again") {
+        await message.reply({ files: [file] });
+      } else {
+        answerCount++;
+        if (AUTO_HINT && (answerCount - 1) % 2 === 0 && answerCount > 2) {
+          await replyWithHint(1);
+        };
+        message.react("❌");
+      }
+
+      async function replyWithHint(hintCount) {
         const [result, temp] = await getHintFile(splash, hintCount);
         Object.assign(splash, temp);
 
         file = new AttachmentBuilder(result, { name: "image.png" });
         await message.reply({ files: [file] });
-      } else if (msg === "again") {
-        await message.reply({ files: [file] });
-      } else {
-        message.react("❌");
       }
     } catch (error) {
       console.error(error);
