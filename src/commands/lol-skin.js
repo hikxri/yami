@@ -1,9 +1,16 @@
-import { AttachmentBuilder, EmbedBuilder, MessageFlags, SlashCommandBuilder } from "discord.js";
+import {
+  AttachmentBuilder,
+  EmbedBuilder,
+  MessageFlags,
+  SlashCommandBuilder,
+} from "discord.js";
 import "dotenv/config";
 import { enlargeSplash, getRandomSkin } from "../lib/lol/get";
 import { filterName, getShorthandFile } from "../lib/lol/shorthand";
 
-export const data = new SlashCommandBuilder().setName("lol-skin").setDescription("guess the league of legends character from the skin");
+export const data = new SlashCommandBuilder()
+  .setName("lol-skin")
+  .setDescription("guess the league of legends character from the skin");
 
 export async function execute(interaction) {
   if (global.gameOngoing[interaction.channel.id]) {
@@ -32,7 +39,7 @@ export async function execute(interaction) {
     global.gameOngoing[interaction.channel.id] = false;
     await interaction.editReply("oops, try executing the command again.");
     return;
-  };
+  }
   const { origFile, embed, answer, splash } = res;
   let file = res.file;
   await interaction.editReply({ embeds: [embed], files: [file] });
@@ -56,31 +63,28 @@ export async function execute(interaction) {
       if (msg === "end") {
         collector.stop("manual end");
       }
-      if (msg === filterName(answer.name.toLowerCase()) || shorthand.includes(msg)) {
+      if (
+        msg === filterName(answer.name.toLowerCase()) ||
+        shorthand.includes(msg)
+      ) {
         message.react("✅");
         winner = message.author;
         collector.stop("correct answer");
-      } else if (msg.includes(answer.skin.toLowerCase()) || answer.set.map((s) => s.toLowerCase()).includes(msg.toLowerCase())) {
+      } else if (
+        msg.includes(answer.skin.toLowerCase()) ||
+        answer.set.map((s) => s.toLowerCase()).includes(msg.toLowerCase())
+      ) {
         message.react("🟨");
       } else if (msg.startsWith("maxhint")) {
         file = origFile;
         await message.reply({ files: [file] });
       } else if (msg.includes("hint") && msg.startsWith("hint")) {
         const hintCount = (msg.match(new RegExp("hint", "g")) || []).length;
-        const { result, left, top, width, height, size } = await enlargeSplash(
-          splash.original, 32 * hintCount, splash.left, splash.top, splash.width, splash.height, splash.size,
-        );
-        splash.left = left;
-        splash.top = top;
-        splash.width = width;
-        splash.height = height;
-        splash.size = size;
-
-        console.log(size);
+        const [result, temp] = await getHintFile(splash, hintCount);
+        Object.assign(splash, temp);
 
         file = new AttachmentBuilder(result, { name: "image.png" });
         await message.reply({ files: [file] });
-
       } else if (msg === "again") {
         await message.reply({ files: [file] });
       } else {
@@ -94,7 +98,9 @@ export async function execute(interaction) {
     }
   });
 
-  const answerText = `\`${answer.skin.toLowerCase() === "original" ? "" : answer.skin + " "}${answer.name}\``;
+  const answerText = `\`${
+    answer.skin.toLowerCase() === "original" ? "" : answer.skin + " "
+  }${answer.name}\``;
 
   collector.on("end", async (collected) => {
     console.log(`Collected ${collected.size} items`);
@@ -123,13 +129,39 @@ export async function execute(interaction) {
   });
 }
 
+async function getHintFile(splash, hintCount) {
+  const { result, left, top, width, height, size } = await enlargeSplash(
+    splash.original,
+    32 * hintCount,
+    splash.left,
+    splash.top,
+    splash.width,
+    splash.height,
+    splash.size,
+  );
+  return [
+    result,
+    { left: left, top: top, width: width, height: height, size: size },
+  ];
+}
+
 async function getData() {
   const startTime = performance.now();
   const res = await getRandomSkin();
   const endTime = performance.now();
   const duration = endTime - startTime;
   if (!res) return null;
-  const { champion, skin, set, originalSplash, splash, left, top, width, height } = res;
+  const {
+    champion,
+    skin,
+    set,
+    originalSplash,
+    splash,
+    left,
+    top,
+    width,
+    height,
+  } = res;
 
   const file = new AttachmentBuilder(splash, { name: "image.png" });
   const origFile = new AttachmentBuilder(originalSplash, {
@@ -150,7 +182,9 @@ async function getData() {
     )
     .setImage("attachment://image.png")
     .setFooter({
-      text: `i'm still testing this --hikari\ntime taken: ${(duration / 1000).toFixed(2)}s`,
+      text: `i'm still testing this --hikari\ntime taken: ${(
+        duration / 1000
+      ).toFixed(2)}s`,
     });
 
   return {
