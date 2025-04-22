@@ -1,3 +1,4 @@
+import dayjs from "dayjs";
 import fs from "fs";
 import path from "path";
 
@@ -9,11 +10,12 @@ if (!fs.existsSync(path.dirname(logPath))) {
 const logFile = fs.createWriteStream(logPath, { flags: "a" });
 
 function getCurrentDateTime() {
-  return new Date().toISOString().split("T").join(" ").slice(0, -5);
+  // return new Date().toISOString().split("T").join(" ").slice(0, -5);
+  return dayjs().format("YYYY-MM-DD HH:mm:ss");
 }
 
 function getCurrentDate() {
-  return new Date().toISOString().split("T")[0];
+  return dayjs().format("YYYY-MM-DD");
 }
 
 export function log(message) {
