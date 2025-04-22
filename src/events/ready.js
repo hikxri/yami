@@ -1,4 +1,5 @@
 import { Events } from "discord.js";
+import { log } from "../lib/log";
 
 export const name = Events.ClientReady;
 export const once = true;
@@ -13,7 +14,7 @@ const messages = [
 ];
 
 export async function execute(client) {
-  console.log(`Logged in as ${client.user.tag}`);
+  log(`Logged in as ${client.user.tag}`);
   if (!global.testing && global.greeting) {
     client.channels
       .fetch("821046596216422400")

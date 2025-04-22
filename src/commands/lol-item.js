@@ -1,6 +1,8 @@
 import { AttachmentBuilder, EmbedBuilder, MessageFlags, SlashCommandBuilder } from "discord.js";
 import { getRandomItem } from "../lib/lol/get";
 import "dotenv/config";
+import { log } from "../lib/log";
+import { v4 as uuidv4 } from "uuid";
 
 export const data = new SlashCommandBuilder().setName("lol-item").setDescription("play 'guess the league of legends item'");
 
@@ -13,6 +15,8 @@ export async function execute(interaction) {
     return;
   }
 
+  const uuid = uuidv4();
+  log(`lol-item game started: ${uuid}`);
   global.gameOngoing[interaction.channel.id] = true;
 
   await interaction.deferReply();
@@ -24,8 +28,6 @@ export async function execute(interaction) {
   let winner = null;
   let hintCount = 0;
 
-  console.log(answer);
-
   const collectorFilter = (m) => m.author.id !== process.env.CLIENT_ID;
   const collector = interaction.channel.createMessageCollector({
     filter: collectorFilter,
@@ -34,7 +36,6 @@ export async function execute(interaction) {
 
   collector.on("collect", async (message) => {
     try {
-      console.log(`Collected message: ${message.content}`);
       const msg = message.content.toLowerCase().trim().replace("’", "'");
       if (msg === "end") {
         collector.stop("manual end");
@@ -67,8 +68,10 @@ export async function execute(interaction) {
     }
   });
 
-  collector.on("end", async (collected) => {
-    console.log(`Collected ${collected.size} items`);
+  log(`${answer.name} - ${uuid}`);
+
+  collector.on("end", async () => {
+    log(`lol-item game ended: ${uuid}`);
     global.gameOngoing[interaction.channel.id] = false;
     if (collector.endReason === "limit") {
       await interaction.channel.send({

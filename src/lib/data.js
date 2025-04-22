@@ -1,5 +1,6 @@
 import path from "path";
 import fs from "fs";
+import { log } from "./log";
 
 export function getDataFile() {
   const dataPath = path.join(__dirname, "..", "data.json");
@@ -13,5 +14,5 @@ export function writeDataFile(data) {
   const dataPath = path.join(__dirname, "..", "data.json");
   fs.writeFileSync(dataPath, JSON.stringify(data, null, 2));
 
-  console.log("data.json updated");
+  log("data.json updated");
 }

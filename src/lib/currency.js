@@ -1,4 +1,5 @@
 import { loadCacheData, writeCacheData } from "./cache";
+import { log } from "./log";
 
 let currenciesData, ratesData;
 const data = loadCacheData("exchange/exchange.json");
@@ -6,7 +7,7 @@ currenciesData = data?.currenciesData;
 ratesData = data?.ratesData;
 
 if (!data || data?.ratesData?.date !== new Date().toISOString().split("T")[0]) {
-  console.log(
+  log(
     data
       ? "Exchange data is outdated, fetching from API..."
       : "Exchange data not found, fetching from API...",

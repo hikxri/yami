@@ -34,7 +34,7 @@ export const data = new SlashCommandBuilder()
 
 export async function execute(interaction) {
   const count = getCount(interaction.guildId);
-  console.log(`count of ${interaction.guild.name}: ${count.number} → ${count.number + 1} by ${interaction.user.username}`);
+  // console.log(`count of ${interaction.guild.name}: ${count.number} → ${count.number + 1} by ${interaction.user.username}`);
 
   count.number++;
 

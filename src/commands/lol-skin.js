@@ -7,6 +7,8 @@ import {
 import "dotenv/config";
 import { enlargeSplash, getRandomSkin } from "../lib/lol/get";
 import { filterName, getShorthandFile } from "../lib/lol/shorthand";
+import { log } from "../lib/log";
+import { v4 as uuidv4 } from "uuid";
 
 export const data = new SlashCommandBuilder()
   .setName("lol-skin")
@@ -24,6 +26,8 @@ export async function execute(interaction) {
     return;
   }
 
+  const uuid = uuidv4();
+  log(`lol-skin game started: ${uuid}`);
   global.gameOngoing[interaction.channel.id] = true;
 
   await interaction.deferReply();
@@ -49,8 +53,6 @@ export async function execute(interaction) {
   let winner = null;
   let answerCount = 0;
 
-  console.log(answer);
-
   const shorthand = getShorthandFile()[answer.name];
 
   const collectorFilter = (m) => m.author.id !== process.env.CLIENT_ID;
@@ -61,13 +63,11 @@ export async function execute(interaction) {
 
   collector.on("collect", async (message) => {
     try {
-      console.log(`Collected message: ${message.content}`);
       const msg = filterName(message.content);
 
       if (msg === "end") {
         collector.stop("manual end");
-      }
-      if (
+      } else if (
         msg === filterName(answer.name.toLowerCase()) ||
         shorthand.includes(msg)
       ) {
@@ -83,7 +83,7 @@ export async function execute(interaction) {
       } else if (msg.startsWith("maxhint")) {
         file = origFile;
         await message.reply({ files: [file] });
-      } else if ((msg.includes("hint") && msg.startsWith("hint"))) {
+      } else if (msg.includes("hint") && msg.startsWith("hint")) {
         const hintCount = (msg.match(new RegExp("hint", "g")) || []).length;
         await replyWithHint(hintCount);
       } else if (msg === "again") {
@@ -92,7 +92,7 @@ export async function execute(interaction) {
         answerCount++;
         if (AUTO_HINT && (answerCount - 1) % 2 === 0 && answerCount > 2) {
           await replyWithHint(1);
-        };
+        }
         message.react("❌");
       }
 
@@ -115,8 +115,10 @@ export async function execute(interaction) {
     answer.skin.toLowerCase() === "original" ? "" : answer.skin + " "
   }${answer.name}\``;
 
-  collector.on("end", async (collected) => {
-    console.log(`Collected ${collected.size} items`);
+  log(`${answerText} - ${uuid}`);
+
+  collector.on("end", async () => {
+    log(`lol-skin game ended: ${uuid}`);
     global.gameOngoing[interaction.channel.id] = false;
     if (collector.endReason === "limit") {
       await interaction.channel.send({

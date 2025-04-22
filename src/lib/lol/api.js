@@ -1,10 +1,12 @@
+import { log } from "../log";
+
 // get latest version
 export async function getLatestVersion() {
   const latestVersion = await fetch("https://ddragon.leagueoflegends.com/api/versions.json")
     .then((res) => res.json())
     .then((res) => res[0]);
 
-  console.log(`Current LoL version: ${latestVersion}`);
+  log(`Current LoL version: ${latestVersion}`);
   return latestVersion;
 }
 

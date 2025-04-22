@@ -1,4 +1,5 @@
 import { loadCacheData, loadCacheImage, writeCacheData, writeCacheImage } from "../cache";
+import { log } from "../log";
 import { getLatestVersion, getCharacterList, getItemList, getCharacterData } from "./api";
 import sharp from "sharp";
 
@@ -16,12 +17,12 @@ const charactersData = loadCacheData(`lol/${latestVersion}/champions/champions.j
 let characterList, characterNames;
 
 if (!charactersData) {
-  console.log("Champion data not found, fetching from API...");
+  log("Champion data not found, fetching from API...");
   const data = await getCharacterList(latestVersion);
   characterList = data.characterList;
   characterNames = data.characterNames;
 
-  console.log("Caching champion data...");
+  log("Caching champion data...");
   writeCacheData(`lol/${latestVersion}/champions/champions.json`, data);
 } else {
   characterList = charactersData.characterList;
@@ -32,7 +33,7 @@ const itemsData = loadCacheData(`lol/${latestVersion}/items/items.json`);
 let itemList, itemNames, itemNamesSet, itemMaps, items;
 
 if (!itemsData) {
-  console.log("Item data not found, fetching from API...");
+  log("Item data not found, fetching from API...");
   const data = await getItemList(latestVersion);
   items = data.items;
   itemNames = data.itemNames;
@@ -40,7 +41,7 @@ if (!itemsData) {
   itemMaps = data.itemMaps;
   itemList = Object.keys(itemNames);
 
-  console.log("Caching item data...");
+  log("Caching item data...");
   writeCacheData(`lol/${latestVersion}/items/items.json`, data);
 } else {
   items = itemsData.items;
@@ -58,10 +59,10 @@ export async function getCharacterInfo(name) {
     `lol/${latestVersion}/champions/${name}/${name}.json`,
   );
   if (!characterData) {
-    console.log(`${name}.json not found, fetching from API...`);
+    log(`${name}.json not found, fetching from API...`);
     characterData = await getCharacterData(name);
 
-    console.log("Caching character data...");
+    log("Caching character data...");
     writeCacheData(
       `lol/${latestVersion}/champions/${name}/${name}.json`,
       characterData,
@@ -78,7 +79,7 @@ export async function getItemIcon(itemId) {
     return itemIcon;
   }
 
-  console.log(`${itemId}.png not found, fetching from API...`);
+  log(`${itemId}.png not found, fetching from API...`);
 
   itemIcon = await fetch(
     `https://ddragon.leagueoflegends.com/cdn/${latestVersion}/img/item/${itemId}.png`,
@@ -89,7 +90,7 @@ export async function getItemIcon(itemId) {
   const blob = await itemIcon.blob();
   const buffer = await blob.arrayBuffer();
   itemIcon = Buffer.from(buffer);
-  console.log("Caching item icon...");
+  log("Caching item icon...");
   writeCacheImage(`lol/${latestVersion}/items/${itemId}.png`, itemIcon);
   return itemIcon;
 }
@@ -99,7 +100,7 @@ export async function getAbilityIcon(name, key, url = null) {
     `lol/${latestVersion}/champions/${name}/ability${key}.png`,
   );
   if (!spellIcon) {
-    console.log(`ability${key}.png not found, fetching from API...`);
+    log(`ability${key}.png not found, fetching from API...`);
     if (!url) {
       const characterData = await getCharacterInfo(name);
       url = characterData.abilities[key][0].icon;
@@ -111,7 +112,7 @@ export async function getAbilityIcon(name, key, url = null) {
     const blob = await spellIcon.blob();
     const buffer = await blob.arrayBuffer();
     spellIcon = Buffer.from(buffer);
-    console.log("Caching ability icon...");
+    log("Caching ability icon...");
     writeCacheImage(`lol/${latestVersion}/champions/${name}/ability${key}.png`, spellIcon);
   }
 
@@ -125,7 +126,7 @@ export async function getSkinSplash(characterName, skinId, url) {
 
   if (splash) return splash;
 
-  console.log(`${skinId}.png not found, fetching from API...`);
+  log(`${skinId}.png not found, fetching from API...`);
 
   splash = await fetch(url);
   if (!splash.ok) {
@@ -134,7 +135,7 @@ export async function getSkinSplash(characterName, skinId, url) {
   const blob = await splash.blob();
   const buffer = await blob.arrayBuffer();
   splash = Buffer.from(buffer);
-  console.log("Caching skin splash...");
+  log("Caching skin splash...");
   writeCacheImage(
     `lol/${latestVersion}/skins/${characterName}/${skinId}.png`,
     splash,

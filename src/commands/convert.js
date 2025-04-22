@@ -49,7 +49,7 @@ export async function execute(interaction) {
   const fromCurrency = interaction.options.getString("from");
   const toCurrency = interaction.options.getString("to") || "USD";
 
-  console.log("convert", value, fromCurrency, toCurrency);
+  // console.log("convert", value, fromCurrency, toCurrency);
 
   const converted = convert(value, fromCurrency, toCurrency);
 

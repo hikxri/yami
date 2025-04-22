@@ -2,6 +2,8 @@ import { AttachmentBuilder, EmbedBuilder, MessageFlags, SlashCommandBuilder } fr
 import { getRandomAbility } from "../lib/lol/get";
 import "dotenv/config";
 import { filterName, getShorthandFile } from "../lib/lol/shorthand";
+import { log } from "../lib/log";
+import { v4 as uuidv4 } from "uuid";
 
 export const data = new SlashCommandBuilder()
   .setName("lol-ability")
@@ -16,6 +18,8 @@ export async function execute(interaction) {
     return;
   }
 
+  const uuid = uuidv4();
+  log(`lol-ability game started: ${uuid}`);
   global.gameOngoing[interaction.channel.id] = true;
 
   await interaction.deferReply();
@@ -30,8 +34,6 @@ export async function execute(interaction) {
 
   const shorthand = getShorthandFile()[answer.champion];
 
-  console.log(answer);
-
   const collectorFilter = (m) => m.author.id !== process.env.CLIENT_ID;
   const collector = interaction.channel.createMessageCollector({
     filter: collectorFilter,
@@ -40,7 +42,6 @@ export async function execute(interaction) {
 
   collector.on("collect", async (message) => {
     try {
-      console.log(`Collected message: ${message.content}`);
       const msg = filterName(message.content);
       if (msg === "end") {
         collector.stop("manual end");
@@ -93,26 +94,29 @@ export async function execute(interaction) {
     }
   });
 
-  collector.on("end", async (collected) => {
-    console.log(`Collected ${collected.size} items`);
+  const answerText = `\`${answer.champion} ${answer.key} - ${answer.name}\``;
+  log(`${answerText} ${uuid}`);
+
+  collector.on("end", async () => {
+    log(`lol-ability game ended: ${uuid}`);
     global.gameOngoing[interaction.channel.id] = false;
     if (collector.endReason === "limit") {
       await interaction.channel.send({
-        content: `no one got the correct answer! the answer was: \`${answer.champion} ${answer.key} - ${answer.name}\``,
+        content: `no one got the correct answer! the answer was: ${answerText}`,
         files: [origFile],
       });
       return;
     }
     if (collector.endReason === "manual end") {
       await interaction.channel.send({
-        content: `game ended. the answer was: \`${answer.champion} ${answer.key} - ${answer.name}\``,
+        content: `game ended. the answer was: ${answerText}`,
         files: [origFile],
       });
       return;
     }
     if (collector.endReason === "correct answer") {
       await interaction.channel.send({
-        content: `<@${winner.id}> won! the answer was: \`${answer.champion} ${answer.key} - ${answer.name}\``,
+        content: `<@${winner.id}> won! the answer was: ${answerText}`,
         files: [origFile],
       });
       return;
