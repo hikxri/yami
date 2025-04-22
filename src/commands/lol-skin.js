@@ -7,7 +7,7 @@ import {
 import "dotenv/config";
 import { enlargeSplash, getRandomSkin } from "../lib/lol/get";
 import { filterName, getShorthandFile } from "../lib/lol/shorthand";
-import { log } from "../lib/log";
+import { log, logError } from "../lib/log";
 import { v4 as uuidv4 } from "uuid";
 
 export const data = new SlashCommandBuilder()
@@ -34,15 +34,15 @@ export async function execute(interaction) {
 
   let res;
   try {
-    res = await getData();
+    res = await getData(uuid);
   } catch (e) {
-    console.error(e);
+    logError(e);
     global.gameOngoing[interaction.channel.id] = false;
     await interaction.editReply("oops, try executing the command again.");
     return;
   }
   if (!res) {
-    console.error(e);
+    logError(e);
     global.gameOngoing[interaction.channel.id] = false;
     await interaction.editReply("oops, try executing the command again.");
     return;
@@ -104,7 +104,7 @@ export async function execute(interaction) {
         await message.reply({ files: [file] });
       }
     } catch (error) {
-      console.error(error);
+      logError(error);
       global.gameOngoing[interaction.channel.id] = false;
       collector.stop("error");
       await message.reply(`<@${process.env.OWNER_ID}> help`);
@@ -122,21 +122,21 @@ export async function execute(interaction) {
     global.gameOngoing[interaction.channel.id] = false;
     if (collector.endReason === "limit") {
       await interaction.channel.send({
-        content: `no one got the correct answer! the answer was: ${answerText}`,
+        content: `no one got the correct answer! the answer was: ${answerText}\n-# game id: ${uuid}`,
         files: [origFile],
       });
       return;
     }
     if (collector.endReason === "manual end") {
       await interaction.channel.send({
-        content: `game ended. the answer was: ${answerText}`,
+        content: `game ended. the answer was: ${answerText}\n-# game id: ${uuid}`,
         files: [origFile],
       });
       return;
     }
     if (collector.endReason === "correct answer") {
       await interaction.channel.send({
-        content: `<@${winner.id}> won! the answer was: ${answerText}`,
+        content: `<@${winner.id}> won! the answer was: ${answerText}\n-# game id: ${uuid}`,
         files: [origFile],
       });
       return;
@@ -160,11 +160,8 @@ async function getHintFile(splash, hintCount) {
   ];
 }
 
-async function getData() {
-  const startTime = performance.now();
+async function getData(uuid) {
   const res = await getRandomSkin();
-  const endTime = performance.now();
-  const duration = endTime - startTime;
   if (!res) return null;
   const {
     champion,
@@ -197,9 +194,7 @@ async function getData() {
     )
     .setImage("attachment://image.png")
     .setFooter({
-      text: `i'm still testing this --hikari\ntime taken: ${(
-        duration / 1000
-      ).toFixed(2)}s`,
+      text: `game id: ${uuid}`,
     });
 
   return {

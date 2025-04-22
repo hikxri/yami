@@ -1,6 +1,6 @@
 import { MessageFlags, Events } from "discord.js";
 import { getDataFile } from "../lib/data";
-import { log } from "../lib/log";
+import { log, logError } from "../lib/log";
 
 export const name = Events.InteractionCreate;
 export const on = true;
@@ -45,7 +45,7 @@ export async function execute(interaction) {
     try {
       await command.execute(interaction);
     } catch (error) {
-      console.error(error);
+      logError(error);
       if (interaction.replied || interaction.deferred) {
         await interaction.followUp(`<@${process.env.OWNER_ID}> help`);
       } else {
@@ -57,7 +57,7 @@ export async function execute(interaction) {
     const command = interaction.client.commands.get(interaction.commandName);
 
     if (!command) {
-      console.error(
+      logError(
         `No command matching ${interaction.commandName} was found.`,
       );
       return;
@@ -66,7 +66,7 @@ export async function execute(interaction) {
     try {
       await command.autocomplete(interaction);
     } catch (error) {
-      console.error(error);
+      logError(error);
       if (interaction.replied || interaction.deferred) {
         await interaction.followUp(
           `<@${process.env.OWNER_ID}> help\n-# interaction type: ${interaction.type}`,

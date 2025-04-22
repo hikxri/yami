@@ -17,13 +17,13 @@
 ## TODO
 ### fixes
 - sometimes ❌ reactions are removed
-- automatic hints are still sent after "end"
+- ~~automatic hints are still sent after "end"~~
 
 ### features
 - react with question mark if unknown champion/item name
 - ~~automatic hints for lol games~~
   - toggle automatic hints from command
-- log error dump
+- ~~log error dump~~
 - leaderboard / stats
   - winrate (avg. number of tries)
   - game count

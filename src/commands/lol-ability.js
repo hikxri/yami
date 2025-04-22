@@ -2,7 +2,7 @@ import { AttachmentBuilder, EmbedBuilder, MessageFlags, SlashCommandBuilder } fr
 import { getRandomAbility } from "../lib/lol/get";
 import "dotenv/config";
 import { filterName, getShorthandFile } from "../lib/lol/shorthand";
-import { log } from "../lib/log";
+import { log, logError } from "../lib/log";
 import { v4 as uuidv4 } from "uuid";
 
 export const data = new SlashCommandBuilder()
@@ -24,7 +24,7 @@ export async function execute(interaction) {
 
   await interaction.deferReply();
 
-  const res = await getData();
+  const res = await getData(uuid);
 
   if (!res) await interaction.editReply("oops, try executing the command again.");
   const { origFile, file, embed, answer } = res;
@@ -88,7 +88,7 @@ export async function execute(interaction) {
         message.react("❌");
       }
     } catch (error) {
-      console.error(error);
+      logError(error);
       global.gameOngoing[interaction.channel.id] = false;
       await message.reply(`<@${process.env.OWNER_ID}> help`);
     }
@@ -124,11 +124,8 @@ export async function execute(interaction) {
   });
 }
 
-async function getData() {
-  const startTime = performance.now();
+async function getData(uuid) {
   const res = await getRandomAbility();
-  const endTime = performance.now();
-  const duration = endTime - startTime;
   if (!res) return null;
   const { key, name, champion, icon, originalIcon } = res;
 
@@ -152,7 +149,7 @@ async function getData() {
     )
     .setImage("attachment://image.png")
     .setFooter({
-      text: `i'm still testing this --hikari\ntime taken: ${(duration / 1000).toFixed(2)}s`,
+      text: `game id: ${uuid}`,
     });
 
   return {

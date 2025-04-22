@@ -1,7 +1,7 @@
 import { AttachmentBuilder, EmbedBuilder, MessageFlags, SlashCommandBuilder } from "discord.js";
 import { getRandomItem } from "../lib/lol/get";
 import "dotenv/config";
-import { log } from "../lib/log";
+import { log, logError } from "../lib/log";
 import { v4 as uuidv4 } from "uuid";
 
 export const data = new SlashCommandBuilder().setName("lol-item").setDescription("play 'guess the league of legends item'");
@@ -21,7 +21,7 @@ export async function execute(interaction) {
 
   await interaction.deferReply();
 
-  const res = await getData();
+  const res = await getData(uuid);
   if (!res) await interaction.editReply("oops, try executing the command again.");
   const { origFile, file, embed, answer } = res;
   await interaction.editReply({ embeds: [embed], files: [file] });
@@ -39,8 +39,7 @@ export async function execute(interaction) {
       const msg = message.content.toLowerCase().trim().replace("’", "'");
       if (msg === "end") {
         collector.stop("manual end");
-      }
-      if (msg === answer.name.toLowerCase()) {
+      } else if (msg === answer.name.toLowerCase()) {
         message.react("✅");
         winner = message.author;
         collector.stop("correct answer");
@@ -62,7 +61,7 @@ export async function execute(interaction) {
         message.react("❌");
       }
     } catch (error) {
-      console.error(error);
+      logError(error);
       global.gameOngoing[interaction.channel.id] = false;
       await message.reply(`<@${process.env.OWNER_ID}> help`);
     }
@@ -97,11 +96,8 @@ export async function execute(interaction) {
   });
 }
 
-async function getData() {
-  const startTime = performance.now();
+async function getData(uuid) {
   const res = await getRandomItem();
-  const endTime = performance.now();
-  const duration = endTime - startTime;
   if (!res) return null;
   const { name, icon, originalIcon } = res;
 
@@ -124,7 +120,7 @@ async function getData() {
     )
     .setImage("attachment://image.png")
     .setFooter({
-      text: `i'm still testing this --hikari\ntime taken: ${(duration / 1000).toFixed(2)}s`,
+      text: `game id: ${uuid}`,
     });
 
   return {
