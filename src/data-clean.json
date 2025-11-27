@@ -1,0 +1,11 @@
+{
+  "testing": false,
+  "greeting": false,
+  "test_users": [
+    175062256021798900
+  ],
+  "test_commands": [
+    "roll"
+  ],
+  "count": []
+}

@@ -4,6 +4,8 @@ import path from "path";
 import "dotenv/config";
 import { getDataFile } from "./lib/data";
 
+console.log("Starting...");
+
 const cfg = getDataFile();
 
 const client = new Client({

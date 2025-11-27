@@ -45,32 +45,6 @@ export async function execute(interaction) {
     await interaction.reply(`\`gameOngoing\` of <#${interaction.channel.id}> is resetted to \`false\``);
     return;
   }
-  if (command === "model" && args) {
-    const cfg = getDataFile();
-    const models = cfg.model;
-    if (args === "list") {
-      await interaction.reply({
-        content: `\`\`\`${Object.entries(models).map(([key, value]) => `${key} → ${value}`).join("\n")}\`\`\``,
-        flags: MessageFlags.Ephemeral,
-      });
-      return;
-    }
-    if (typeof models[args] !== "undefined") {
-      Object.keys(models).forEach((key) => {
-        cfg.model[key] = key === args ? true : false;
-      });
-      writeDataFile(cfg);
-      await interaction.reply({
-        content: `i am now using \`${args}\` locally`,
-      });
-      return;
-    }
-    await interaction.reply({
-      content: `\`${args}\` is not a valid model!`,
-      flags: MessageFlags.Ephemeral,
-    });
-    return;
-  }
   if (command === "say" && args) {
     const [channel, message] = args.split(/ (.*)/s);
     const client = interaction.client;

@@ -31,3 +31,6 @@
 - (admin) add shorthand command
 - arcaea archive
 - arcaea games
+  - guess the arcaea song jacket (zoomed in)
+    - after 5 guesses, it zooms out
+- easter eggs

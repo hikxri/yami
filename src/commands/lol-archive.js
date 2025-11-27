@@ -99,8 +99,9 @@ export async function autocomplete(interaction) {
       const itemName = interaction.options.getString("name", true);
       let mapChoices = [];
       if (itemMaps[itemName]) {
+        console.log(itemMaps[itemName], maps[itemMaps[itemName][0].map]);
         mapChoices = itemMaps[itemName].map((item) => ({
-          name: maps[item.map]?.mapName || "Unknown",
+          name: maps[item.map] || "Unknown",
           value: item.id,
         }));
       }
