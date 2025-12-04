@@ -1,26 +1,25 @@
 import Papa from "papaparse";
 
-export async function getSongNameList() {
+export async function getSongNameList(): Promise<string[][]> {
   const scoresText = await fetch("https://raw.githubusercontent.com/hikxri/arcaea-b30-web/main/public/scores.csv")
     .then((res) => res.text());
 
-  const parsePromise = new Promise((resolve, reject) => {
-    Papa.parse(scoresText, {
+  const rows = await new Promise<string[][]>((resolve, reject) => {
+    Papa.parse<string[]>(scoresText, {
       header: false,
       encoding: "utf-8",
-      complete: function(results) {
-        resolve(results.data.slice(1));
+      complete: (results) => {
+        resolve(results.data);
       },
-      error: function(error) {
+      error: (error: Error) => {
         reject(error);
       },
     });
   });
 
-  if (parsePromise) {
-    const songNameList = await parsePromise;
-    return songNameList;
-  }
+  const songNameList = rows.slice(1);
+
+  return songNameList;
 }
 
 export async function getSongNameMap() {

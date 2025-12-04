@@ -46,6 +46,10 @@ export async function execute(interaction) {
       await command.execute(interaction);
     } catch (error) {
       logError(error);
+      if (!interaction) {
+        logError("No interaction was found.");
+        return;
+      }
       if (interaction.replied || interaction.deferred) {
         await interaction.followUp(`<@${process.env.OWNER_ID}> help`);
       } else {

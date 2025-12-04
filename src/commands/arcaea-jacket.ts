@@ -1,25 +1,34 @@
 import {
   AttachmentBuilder,
+  ChatInputCommandInteraction,
+  Embed,
   EmbedBuilder,
+  Message,
   MessageFlags,
+  PartialGroupDMChannel,
   SlashCommandBuilder,
+  User,
 } from "discord.js";
 import "dotenv/config";
-import { getRandomSkin } from "../lib/lol/get";
-import { enlargeSplash } from "../lib/image";
-import { filterName, getShorthandFile } from "../lib/lol/shorthand";
 import { log, logError } from "../lib/log";
 import { v4 as uuidv4 } from "uuid";
+import { filterName, getShorthandFile } from "../lib/arcaea/shorthand";
+import { enlargeSplash } from "../lib/image";
+import { getRandomSongJacket } from "../lib/arcaea/get";
 
 export const data = new SlashCommandBuilder()
-  .setName("lol-skin")
-  .setDescription("guess the league of legends character from the skin");
+  .setName("arcaea-jacket")
+  .setDescription("guess the arcaea chart from the jacket");
 
-// temporary
 const AUTO_HINT = true;
 
-export async function execute(interaction) {
-  if (global.gameOngoing[interaction.channel.id]) {
+export async function execute(interaction: ChatInputCommandInteraction): Promise<void> {
+  if (!interaction.channel) return;
+  if (interaction.channel instanceof PartialGroupDMChannel) return; // apparently you can't use collectors in "Partial Group DMs", whatever that is
+
+  const channelId = interaction.channel!.id;
+
+  if (global.gameOngoing[channelId]) {
     await interaction.reply({
       content: "a game is already ongoing in this channel",
       flags: MessageFlags.Ephemeral,
@@ -28,8 +37,8 @@ export async function execute(interaction) {
   }
 
   const uuid = uuidv4();
-  log(`lol-skin game started: ${uuid}`);
-  global.gameOngoing[interaction.channel.id] = true;
+  log(`arcaea-jacket game started: ${uuid}`);
+  global.gameOngoing[channelId] = true;
 
   await interaction.deferReply();
 
@@ -38,89 +47,83 @@ export async function execute(interaction) {
     res = await getData(uuid);
   } catch (e) {
     logError(e);
-    global.gameOngoing[interaction.channel.id] = false;
+    global.gameOngoing[channelId] = false;
     await interaction.editReply("oops, try executing the command again.");
     return;
   }
   if (!res) {
-    logError(e);
-    global.gameOngoing[interaction.channel.id] = false;
+    logError("Something went wrong when getting data.");
+    global.gameOngoing[channelId] = false;
     await interaction.editReply("oops, try executing the command again.");
     return;
   }
-  const { origFile, embed, answer, splash } = res;
+  const { origFile, embed, answer, jacket } = res;
   let file = res.file;
   await interaction.editReply({ embeds: [embed], files: [file] });
-  let winner = null;
+  let winner: User | null = null;
   let answerCount = 0;
 
-  const shorthand = getShorthandFile()[answer.name];
+  const shorthand = getShorthandFile()[answer.title] || [""];
 
-  const collectorFilter = (m) => m.author.id !== process.env.CLIENT_ID;
+  const collectorFilter = (m: Message) => m.author.id !== process.env.CLIENT_ID;
   const collector = interaction.channel.createMessageCollector({
     filter: collectorFilter,
     max: 50,
   });
 
-  collector.on("collect", async (message) => {
+  collector.on("collect", async (message: Message) => {
     try {
       const msg = filterName(message.content);
+      // console.log(message.content, msg);
 
       if (msg === "end") {
         collector.stop("manual end");
-      } else if (
-        msg === filterName(answer.name.toLowerCase()) ||
-        shorthand.includes(msg)
-      ) {
+      } else if (msg === filterName(answer.title.toLowerCase()) || (shorthand.includes(msg) && msg !== "")) {
         message.react("✅");
         winner = message.author;
         collector.stop("correct answer");
-      } else if (
-        msg.includes(answer.skin.toLowerCase()) ||
-        answer.set.map((s) => s.toLowerCase()).includes(msg.toLowerCase())
-      ) {
+      } else if ((answer.title.toLowerCase().includes(msg) || shorthand.includes(msg)) && msg !== "") {
         answerCount++;
         message.react("🟨");
-      } else if (msg.startsWith("maxhint")) {
+      } else if (msg.startsWith("maxhint") && message.author.id === process.env.OWNER_ID) {
         file = origFile;
         await message.reply({ files: [file] });
       } else if (msg.includes("hint") && msg.startsWith("hint")) {
-        const hintCount = (msg.match(new RegExp("hint", "g")) || []).length;
-        await replyWithHint(hintCount);
+        // const hintCount = (msg.match(new RegExp("hint", "g")) || []).length;
+        await replyWithHint(1);
       } else if (msg === "again") {
         await message.reply({ files: [file] });
       } else {
         answerCount++;
-        if (AUTO_HINT && (answerCount - 1) % 2 === 0 && answerCount > 2) {
+        if (AUTO_HINT && (answerCount - 1) % 3 === 0 && answerCount > 2) {
           await replyWithHint(1);
         }
         message.react("❌");
       }
 
-      async function replyWithHint(hintCount) {
-        const [result, temp] = await getHintFile(splash, hintCount);
-        Object.assign(splash, temp);
+      async function replyWithHint(hintCount: number) {
+        const [result, temp] = await getHintFile(jacket, hintCount);
+        Object.assign(jacket, temp);
 
         file = new AttachmentBuilder(result, { name: "image.png" });
         await message.reply({ files: [file] });
       }
     } catch (error) {
       logError(error);
-      global.gameOngoing[interaction.channel.id] = false;
+      global.gameOngoing[channelId] = false;
       collector.stop("error");
       await message.reply(`<@${process.env.OWNER_ID}> help`);
     }
   });
 
-  const answerText = `\`${
-    answer.skin.toLowerCase() === "original" ? "" : answer.skin + " "
-  }${answer.name}\``;
+  const answerText = answer.title;
 
   log(`${answerText} - ${uuid}`);
 
   collector.on("end", async () => {
-    log(`lol-skin game ended: ${uuid}`);
-    global.gameOngoing[interaction.channel.id] = false;
+    log(`arcaea-jacket game ended: ${uuid}`);
+    global.gameOngoing[channelId] = false;
+    if (!interaction.channel || interaction.channel instanceof PartialGroupDMChannel) return;
     if (collector.endReason === "limit") {
       await interaction.channel.send({
         content: `no one got the correct answer! the answer was: ${answerText}\n-# game id: ${uuid}`,
@@ -136,6 +139,10 @@ export async function execute(interaction) {
       return;
     }
     if (collector.endReason === "correct answer") {
+      if (!winner) {
+        await interaction.channel.send("...no one won? hikari fix your bot");
+        return;
+      }
       await interaction.channel.send({
         content: `<@${winner.id}> won! the answer was: ${answerText}\n-# game id: ${uuid}`,
         files: [origFile],
@@ -145,53 +152,60 @@ export async function execute(interaction) {
   });
 }
 
-async function getHintFile(splash, hintCount) {
+async function getHintFile(splash: Jacket, hintCount: number): Promise<[Buffer, Jacket]> {
   const { result, left, top, width, height, size } = await enlargeSplash(
     splash.original,
-    32 * hintCount,
+    // 32 * hintCount,
+    16 * hintCount,
     splash.left,
     splash.top,
     splash.width,
     splash.height,
-    splash.size,
+    128
   );
-  return [
-    result,
-    { left: left, top: top, width: width, height: height, size: size },
-  ];
+  return [result, { left: left, top: top, width: width, height: height, size: size } as Jacket];
 }
 
-async function getData(uuid) {
-  const res = await getRandomSkin();
-  if (!res) return null;
-  const {
-    champion,
-    skin,
-    set,
-    originalSplash,
-    splash,
-    left,
-    top,
-    width,
-    height,
-  } = res;
+type Data = {
+  file: AttachmentBuilder;
+  origFile: AttachmentBuilder;
+  embed: EmbedBuilder;
+  answer: {
+    title: string;
+  };
+  jacket: Jacket;
+};
 
-  const file = new AttachmentBuilder(splash, { name: "image.png" });
-  const origFile = new AttachmentBuilder(originalSplash, {
+type Jacket = {
+  original: Buffer;
+  left: number;
+  top: number;
+  width: number;
+  height: number;
+  size: number;
+};
+
+async function getData(uuid: string): Promise<Data | null> {
+  const res = await getRandomSongJacket(64);
+  if (!res) return null;
+  const { jacket, title, originalJacket, left, top, width, height } = res;
+
+  const file = new AttachmentBuilder(jacket, { name: "image.png" });
+  const origFile = new AttachmentBuilder(originalJacket, {
     name: "original_image.png",
   });
 
   const embed = new EmbedBuilder()
-    .setTitle("whose skin is this?")
+    .setTitle("which chart is this?")
     .setDescription(
       `
-        answer in this format: \`<champion name>\`
-        for example: \`Pyke\`
+        answer in this format: \`<song name>\`
+        for example: \`Testify\`
 
         end the game prematurely with \`end\`
 
         answer is case-insensitive
-        `,
+        `
     )
     .setImage("attachment://image.png")
     .setFooter({
@@ -203,12 +217,10 @@ async function getData(uuid) {
     origFile: origFile,
     embed: embed,
     answer: {
-      name: champion,
-      set: set,
-      skin: skin,
+      title: title,
     },
-    splash: {
-      original: originalSplash,
+    jacket: {
+      original: originalJacket,
       left: left,
       top: top,
       width: width,

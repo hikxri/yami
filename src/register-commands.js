@@ -4,14 +4,14 @@ import fs from "fs";
 import path from "path";
 
 const commands = [];
-const GUILD_ONLY = false;
+const GUILD_ONLY = true;
 
 // collect commands from files
 console.log("Collecting slash commands...");
 const commandsFolderPath = path.join(__dirname, "commands");
 const commandFiles = fs
   .readdirSync(commandsFolderPath)
-  .filter((file) => file.endsWith(".js"));
+  .filter((file) => file.endsWith(".js") || file.endsWith(".ts"));
 for (const file of commandFiles) {
   const filePath = path.join(commandsFolderPath, file);
   const command = await import(filePath);

@@ -1,7 +1,7 @@
 import path from "path";
 import fs from "fs";
 
-export function getShorthandFile() {
+export function getShorthandFile(): Record<string, string> {
   const dataPath = path.join(__dirname, ".", "shorthand.json");
   const dataFile = fs.readFileSync(dataPath, "utf8");
   const dataJson = JSON.parse(dataFile);
@@ -9,7 +9,7 @@ export function getShorthandFile() {
   return dataJson;
 }
 
-export function filterName(input) {
+export function filterName(input: string): string {
   const replaces = [".", "'", "’", ",", "&"];
 
   input = input.toLowerCase().trim();

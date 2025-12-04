@@ -1,0 +1,1 @@
+export type Diffculty = "PST" | "PRS" | "FTR" | "BYD" | "ETR";

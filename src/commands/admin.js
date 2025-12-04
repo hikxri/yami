@@ -53,7 +53,6 @@ export async function execute(interaction) {
     .then((c) => c.send(message));
   }
 
-
   await interaction.reply({
     content: "hikari what the fuck are you doing",
     flags: MessageFlags.Ephemeral,
