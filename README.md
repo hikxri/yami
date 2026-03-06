@@ -14,10 +14,16 @@
 - lol-archive - get info about a specific item/ability
 - lol-shorthand - view all shorthand writings for league of legends champion names
 
+## arcaea
+- arcaea-jacket - (game) guess the arcaea chart from the jacket
+
 ## TODO
 ### fixes
 - sometimes ❌ reactions are removed
 - ~~automatic hints are still sent after "end"~~
+- lol-archive ability "<champ> <skill>"
+- shorthand in lol-ability is broken
+- `O,` isn't working in `arcaea-jacket`
 
 ### features
 - react with question mark if unknown champion/item name
@@ -31,6 +37,7 @@
 - (admin) add shorthand command
 - arcaea archive
 - arcaea games
-  - guess the arcaea song jacket (zoomed in)
-    - after 5 guesses, it zooms out
+  - ~~guess the arcaea song jacket (zoomed in)~~
+    - ~~after 5 guesses, it zooms out~~\
+  - add "the answer was guessed in XXX seconds"
 - easter eggs

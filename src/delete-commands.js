@@ -20,17 +20,36 @@ const rest = new REST().setToken(process.env.TOKEN);
 //     .catch(console.error);
 // }
 
-(async () => {
-  try {
-    console.log("Started refreshing application (/) commands.");
+const GUILD_ONLY = false;
 
-    await rest.put(
-      Routes.applicationCommands(process.env.CLIENT_ID),
-      { body: [] },
-    );
+if (GUILD_ONLY) {
+  (async () => {
+    try {
+      console.log("Started refreshing application (/) commands.");
 
-    console.log("Successfully deleted all global application (/) commands.");
-  } catch (error) {
-    console.error(error);
-  }
-})();
+      await rest.put(
+        Routes.applicationGuildCommands(process.env.CLIENT_ID, process.env.GUILD_ID),
+        { body: [] },
+      );
+
+      console.log("Successfully deleted all local application (/) commands.");
+    } catch (error) {
+      console.error(error);
+    }
+  })();
+} else {
+  (async () => {
+    try {
+      console.log("Started refreshing application (/) commands.");
+
+      await rest.put(
+        Routes.applicationCommands(process.env.CLIENT_ID),
+        { body: [] },
+      );
+
+      console.log("Successfully deleted all global application (/) commands.");
+    } catch (error) {
+      console.error(error);
+    }
+  })();
+}

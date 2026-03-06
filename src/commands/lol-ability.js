@@ -33,6 +33,7 @@ export async function execute(interaction) {
   let hintCount = 0;
 
   const shorthand = getShorthandFile()[answer.champion];
+  const shorthandAnswers = shorthand.map((s) => `${s} ${answer.key.toLowerCase()}`);
 
   const collectorFilter = (m) => m.author.id !== process.env.CLIENT_ID;
   const collector = interaction.channel.createMessageCollector({
@@ -47,7 +48,7 @@ export async function execute(interaction) {
         collector.stop("manual end");
       } else if (
         msg === `${filterName(answer.champion)} ${answer.key.toLowerCase()}` ||
-        msg === `${shorthand.includes(msg)} ${answer.key.toLowerCase()}` ||
+        shorthandAnswers.includes(msg) ||
         msg === answer.name.toLowerCase()
       ) {
         message.react("✅");

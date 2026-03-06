@@ -11,24 +11,42 @@ export type Data = {
     guild_id: string;
     number: number;
   }[];
-  game_settings: {
-    guild_id: string;
-    "arcaea-jacket"?: SplashGameSettings;
-    "lol-skin"?: SplashGameSettings;
-  }[];
+  game_settings: GuildGameSettings[];
 };
 
 export type SplashGames = "arcaea-jacket" | "lol-skin";
+
+export type GuildGameSettings = {
+  guild_id: string;
+} & Partial<Record<SplashGames, SplashGameSettings>>;
 
 export type SplashGameSettings = {
   initial_size: number;
   size_increase: number;
   auto_hint: boolean;
   auto_hint_interval: number;
-}
+};
+
+const defaultSplashGameSettings: Record<SplashGames, SplashGameSettings> = {
+  "arcaea-jacket": {
+    initial_size: 64,
+    size_increase: 32,
+    auto_hint: true,
+    auto_hint_interval: 5,
+  },
+  "lol-skin": {
+    initial_size: 128,
+    size_increase: 32,
+    auto_hint: true,
+    auto_hint_interval: 3,
+  },
+};
+
+export const splashGames = Object.keys(defaultSplashGameSettings) as SplashGames[];
+export const splashGameSettings = Object.keys(defaultSplashGameSettings[splashGames[0]]) as (keyof SplashGameSettings)[];
 
 export function getDataFile(): Data {
-  const dataPath = path.join(__dirname, "..", "data.json");
+  const dataPath = path.join(__dirname, "..", "data.json"); 
   const dataFile = fs.readFileSync(dataPath, "utf8");
   const dataJson = JSON.parse(dataFile);
 
@@ -45,4 +63,30 @@ export function writeDataFile(data: Data): void {
 export function getGuildGameSettings(guildId: string, game: SplashGames): SplashGameSettings | undefined {
   const data = getDataFile();
   return data.game_settings.find((g) => g.guild_id == guildId)?.[game];
+}
+
+export function setGuildGameSettings(
+  guildId: string,
+  game: SplashGames,
+  setting: keyof SplashGameSettings,
+  value: any
+): void {
+  const data = getDataFile();
+
+  if (!data.game_settings.find((g) => g.guild_id == guildId)) {
+    data.game_settings.push({ guild_id: guildId, ...defaultSplashGameSettings });
+  }
+
+  const index = data.game_settings.findIndex((g) => g.guild_id == guildId);
+
+  if (index == -1 || !data.game_settings[index][game]) {
+    throw new Error(`Guild ${guildId} not found in data.json`);
+  }
+
+  data.game_settings[index][game] = {
+    ...data.game_settings[index][game],
+    [setting]: value,
+  }
+
+  writeDataFile(data);
 }

@@ -14,7 +14,7 @@ itemNames: object of {item IDs : item names}
 */
 
 const charactersData = loadCacheData(`lol/${latestVersion}/champions/champions.json`);
-let characterList, characterNames;
+let characterList: string[], characterNames: Record<string, string>;
 
 if (!charactersData) {
   log("Champion data not found, fetching from API...");
@@ -30,7 +30,11 @@ if (!charactersData) {
 }
 
 const itemsData = loadCacheData(`lol/${latestVersion}/items/items.json`);
-let itemList, itemNames, itemNamesSet, itemMaps, items;
+let itemList: string[],
+  itemNames: Record<string, string>,
+  itemNamesSet: string[],
+  itemMaps: Record<string, string>,
+  items: Record<string, any>;
 
 if (!itemsData) {
   log("Item data not found, fetching from API...");
@@ -54,26 +58,21 @@ if (!itemsData) {
 // for archive
 export { characterNames, itemNamesSet, itemMaps, items };
 
-export async function getCharacterInfo(name) {
-  let characterData = loadCacheData(
-    `lol/${latestVersion}/champions/${name}/${name}.json`,
-  );
+export async function getCharacterInfo(name: string): Promise<Record<string, any>> {
+  let characterData: Record<string, any> = loadCacheData(`lol/${latestVersion}/champions/${name}/${name}.json`);
   if (!characterData) {
     log(`${name}.json not found, fetching from API...`);
     characterData = await getCharacterData(name);
 
     log("Caching character data...");
-    writeCacheData(
-      `lol/${latestVersion}/champions/${name}/${name}.json`,
-      characterData,
-    );
+    writeCacheData(`lol/${latestVersion}/champions/${name}/${name}.json`, characterData);
   }
 
   return characterData;
 }
 
-export async function getItemIcon(itemId) {
-  let itemIcon = loadCacheImage(`lol/${latestVersion}/items/${itemId}.png`);
+export async function getItemIcon(itemId: string): Promise<Buffer | null> {
+  let itemIcon: Buffer | null = loadCacheImage(`lol/${latestVersion}/items/${itemId}.png`);
 
   if (itemIcon) {
     return itemIcon;
@@ -81,13 +80,13 @@ export async function getItemIcon(itemId) {
 
   log(`${itemId}.png not found, fetching from API...`);
 
-  itemIcon = await fetch(
-    `https://ddragon.leagueoflegends.com/cdn/${latestVersion}/img/item/${itemId}.png`,
+  const response: Response = await fetch(
+    `https://ddragon.leagueoflegends.com/cdn/${latestVersion}/img/item/${itemId}.png`
   );
-  if (!itemIcon.ok) {
+  if (!response.ok) {
     return null;
   }
-  const blob = await itemIcon.blob();
+  const blob = await response.blob();
   const buffer = await blob.arrayBuffer();
   itemIcon = Buffer.from(buffer);
   log("Caching item icon...");
@@ -95,21 +94,19 @@ export async function getItemIcon(itemId) {
   return itemIcon;
 }
 
-export async function getAbilityIcon(name, key, url = null) {
-  let spellIcon = loadCacheImage(
-    `lol/${latestVersion}/champions/${name}/ability${key}.png`,
-  );
+export async function getAbilityIcon(name: string, key: string, url: string | null = null): Promise<Buffer | null> {
+  let spellIcon: Buffer | null = loadCacheImage(`lol/${latestVersion}/champions/${name}/ability${key}.png`);
   if (!spellIcon) {
     log(`ability${key}.png not found, fetching from API...`);
     if (!url) {
       const characterData = await getCharacterInfo(name);
       url = characterData.abilities[key][0].icon;
     }
-    spellIcon = await fetch(url);
-    if (!spellIcon.ok) {
+    const response = await fetch(url || "");
+    if (!response.ok) {
       return null;
     }
-    const blob = await spellIcon.blob();
+    const blob = await response.blob();
     const buffer = await blob.arrayBuffer();
     spellIcon = Buffer.from(buffer);
     log("Caching ability icon...");
@@ -119,32 +116,34 @@ export async function getAbilityIcon(name, key, url = null) {
   return spellIcon;
 }
 
-export async function getSkinSplash(characterName, skinId, url) {
-  let splash = loadCacheImage(
-    `lol/${latestVersion}/skins/${characterName}/${skinId}.png`,
-  );
+export async function getSkinSplash(characterName: string, skinId: string, url: string): Promise<Buffer | null> {
+  let splash: Buffer | null = loadCacheImage(`lol/${latestVersion}/skins/${characterName}/${skinId}.png`);
 
   if (splash) return splash;
 
   log(`${skinId}.png not found, fetching from API...`);
 
-  splash = await fetch(url);
-  if (!splash.ok) {
+  const response = await fetch(url);
+  if (!response.ok) {
     return null;
   }
-  const blob = await splash.blob();
+  const blob = await response.blob();
   const buffer = await blob.arrayBuffer();
   splash = Buffer.from(buffer);
   log("Caching skin splash...");
-  writeCacheImage(
-    `lol/${latestVersion}/skins/${characterName}/${skinId}.png`,
-    splash,
-  );
+  writeCacheImage(`lol/${latestVersion}/skins/${characterName}/${skinId}.png`, splash);
   return splash;
 }
 
+export type RandomAbility = {
+  key: string;
+  name: string;
+  champion: string;
+  icon: Buffer;
+  originalIcon: Buffer;
+};
 
-export async function getRandomAbility() {
+export async function getRandomAbility(): Promise<RandomAbility> {
   const characterName = characterList[Math.floor(Math.random() * characterList.length)];
 
   const characterData = await getCharacterInfo(characterName);
@@ -157,7 +156,7 @@ export async function getRandomAbility() {
         name: characterData.abilities[key][0].name,
         icon: characterData.abilities[key][0].icon,
       },
-    ]),
+    ])
   );
 
   const key = abilityKeys[Math.floor(Math.random() * abilityKeys.length)];
@@ -165,6 +164,9 @@ export async function getRandomAbility() {
   const spellIcon = await getAbilityIcon(characterName, key, abilities[key].icon);
 
   // ensure spellIcon is a Buffer
+  if (!spellIcon) {
+    throw new Error("spellIcon is null");
+  }
 
   const buffer = await sharp(spellIcon).resize(128, 128).toBuffer();
   const output = await sharp(buffer).blur(7).greyscale().toBuffer();
@@ -178,10 +180,21 @@ export async function getRandomAbility() {
   };
 }
 
-export async function getRandomItem() {
+export type RandomItem = {
+  name: string;
+  icon: Buffer;
+  originalIcon: Buffer;
+};
+
+export async function getRandomItem(): Promise<RandomItem> {
   const itemId = itemList[Math.floor(Math.random() * itemList.length)];
 
   const itemIcon = await getItemIcon(itemId);
+
+  // ensure itemIcon is a Buffer
+  if (!itemIcon) {
+    throw new Error("itemIcon is null");
+  }
 
   const buffer = await sharp(itemIcon).resize(128, 128).toBuffer();
   const output = await sharp(buffer).blur(7).greyscale().toBuffer();
@@ -193,11 +206,23 @@ export async function getRandomItem() {
   };
 }
 
-export async function getRandomSkin() {
+export type RandomSkin = {
+  champion: string;
+  skin: string;
+  set: string;
+  originalSplash: Buffer;
+  splash: Buffer;
+  left: number;
+  top: number;
+  width: number;
+  height: number;
+};
+
+export async function getRandomSkin(): Promise<RandomSkin> {
   const characterName = characterList[Math.floor(Math.random() * characterList.length)];
   const characterData = await getCharacterInfo(characterName);
 
-  const skins = characterData.skins.map((skin) => {
+  const skins = characterData.skins.map((skin: Record<string, any>) => {
     return {
       name: skin.name,
       id: skin.id,
@@ -208,11 +233,12 @@ export async function getRandomSkin() {
 
   const skin = skins[Math.floor(Math.random() * skins.length)];
 
-  const originalSplash = await getSkinSplash(
-    characterName,
-    skin.id,
-    skin.splash,
-  );
+  const originalSplash = await getSkinSplash(characterName, skin.id, skin.splash);
+
+  if (!originalSplash) {
+    throw new Error("originalSplash is null");
+  }
+
   const temp = sharp(originalSplash);
   const metadata = await temp.metadata();
   const mWidth = metadata.width || 1280;
@@ -245,4 +271,3 @@ export async function getRandomSkin() {
     height: height,
   };
 }
-
