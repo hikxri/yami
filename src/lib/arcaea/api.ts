@@ -1,25 +1,47 @@
 import Papa from "papaparse";
+import type { Difficulty, SongRow } from "./types";
 
-export async function getSongNameList(): Promise<string[][]> {
-  const scoresText = await fetch("https://raw.githubusercontent.com/hikxri/arcaea-b30-web/main/public/scores.csv")
-    .then((res) => res.text());
+// parent key: url (id): string
+// child key: difficulty: Difficulty
+// value: song data with headers: SongRow
+/*
+{
+  url: {
+    difficulty: {
+      title: ...,
+      artist:...,
+      ...
+    },
+  }
+}
+*/
+export async function getSongsData(): Promise<Record<string, Record<Difficulty, SongRow>>> {
+  const scoresText = await fetch(
+    "https://raw.githubusercontent.com/hikxri/arcaea-b30-web/main/public/scores.csv"
+  ).then((res) => res.text());
 
-  const rows = await new Promise<string[][]>((resolve, reject) => {
-    Papa.parse<string[]>(scoresText, {
-      header: false,
+  const rows = await new Promise<SongRow[]>((resolve, reject) => {
+    Papa.parse<SongRow>(scoresText, {
+      header: true,
       encoding: "utf-8",
-      complete: (results) => {
-        resolve(results.data);
-      },
-      error: (error: Error) => {
-        reject(error);
-      },
+      complete: (results) => resolve(results.data),
+      error: (error: Error) => reject(error),
     });
   });
 
-  const songNameList = rows.slice(1);
+  const result: Record<string, Record<string, SongRow>> = {};
 
-  return songNameList;
+  for (const row of rows) {
+    if (!row.url) continue;
+
+    if (!result[row.url]) {
+      result[row.url] = {};
+    }
+
+    result[row.url][row.difficulty] = row;
+  }
+
+  return result;
 }
 
 export async function getSongNameMap() {

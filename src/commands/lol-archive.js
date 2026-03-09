@@ -58,7 +58,7 @@ export const data = new SlashCommandBuilder()
       .addStringOption((option) =>
         option
           .setName("map")
-          .setDescription("map name")
+          .setDescription("map name (item must be selected)")
           .setAutocomplete(true)
           .setRequired(true),
       ),
@@ -82,6 +82,9 @@ export async function autocomplete(interaction) {
 
   if (subcommand === "item") {
     if (focus.name === "name") {
+      if (!text) {
+        return await interaction.respond([]);
+      }
       let filtered = [...itemNamesSet].filter(
         // ignore funny xml names
         (name) => name.toLowerCase().includes(text) && !name.includes("<"),
@@ -96,7 +99,7 @@ export async function autocomplete(interaction) {
     }
 
     if (focus.name === "map") {
-      const itemName = interaction.options.getString("name", true);
+      const itemName = interaction.options.getString("name", false);
       let mapChoices = [];
       if (itemMaps[itemName]) {
         console.log(itemMaps[itemName], maps[itemMaps[itemName][0].map]);

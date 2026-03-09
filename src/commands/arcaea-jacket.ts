@@ -89,7 +89,6 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
         file = origFile;
         await message.reply({ files: [file] });
       } else if (msg.includes("hint") && msg.startsWith("hint")) {
-        // const hintCount = (msg.match(new RegExp("hint", "g")) || []).length;
         await replyWithHint(1);
       } else if (msg === "again") {
         await message.reply({ files: [file] });
@@ -155,7 +154,6 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
 async function getHintFile(splash: Jacket, hintCount: number): Promise<[Buffer, Jacket]> {
   const { result, left, top, width, height, size } = await enlargeSplash(
     splash.original,
-    // 32 * hintCount,
     16 * hintCount,
     splash.left,
     splash.top,

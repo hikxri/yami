@@ -1,44 +1,55 @@
 import sharp from "sharp";
-import { getSongNameList, getSongNameMap } from "./api";
-import type { Diffculty } from "./types";
+import { getSongsData, getSongNameMap } from "./api";
+import type { Difficulty } from "./types";
 
 export const songNameMap = await getSongNameMap();
-export const songNameList = await getSongNameList();
+export const songsData = await getSongsData();
+export const songNames = getSongNames();
 
-export async function getSongJacket(title: string, diff: Diffculty): Promise<Buffer> {
-  const songName = (songNameMap[title] || title)
-    .toLowerCase()
-    .replace(/\s+/g, "_")
-    .replace(/!|\*|#|\[|\]|\?|:|,|\||\\/g, "");
+// key: song name - artist
+// value: wiki URL
+function getSongNames(): Record<string, string> {
+  const result: Record<string, string> = {};
 
-  const diffPath = `${songName}_${diff.toLowerCase()}.jpg`;
-  const basePath = `${songName}.jpg`;
+  for (const [url, diffs] of Object.entries(songsData)) {
+    for (const row of Object.values(diffs)) {
+      if (!row) continue;
 
+      const key = `${row.title} - ${row.artist}`
+      result[key] = url;
+    }
+  }
+
+  return result;
+}
+
+export async function getSongJacket(id: string, diff: Difficulty): Promise<Buffer> {
   const baseUrl = "https://raw.githubusercontent.com/hikxri/arcaea-b30-web/main/public/jackets/";
 
-  try {
-    const res = await fetch(`${baseUrl}/${diffPath}`);
-    if (!res.ok) throw new Error("Diff jacket not found");
+  const fileName = songsData[id][diff].jacket;
+  if (!fileName) throw new Error(`Song jacket: ${id} | ${diff} not found in data!`);
 
-    const arrayBuffer = await res.arrayBuffer();
-    return Buffer.from(arrayBuffer);
-  } catch {
-    const res = await fetch(`${baseUrl}/${basePath}`);
-    if (!res.ok) throw new Error(`Song jacket: ${songName} | ${diff} not found`);
+  const res = await fetch(`${baseUrl}/${fileName}`);
+  if (!res.ok) throw new Error(`Song jacket: ${id} | ${diff} not found in repository!`);
 
-    const arrayBuffer = await res.arrayBuffer();
-    return Buffer.from(arrayBuffer);
-  }
+  const arrayBuffer = await res.arrayBuffer();
+  return Buffer.from(arrayBuffer);
 }
 
 // helper function for getRandomSongJacket
-function getRandomSongName(): [string, Diffculty] {
-  const song = songNameList[Math.floor(Math.random() * songNameList.length)];
-  return [song[0], song[1] as Diffculty];
+function getRandomSongId(): [string, Difficulty] {
+  const songIds = Object.keys(songsData);
+  const songId = songIds[Math.floor(Math.random() * songIds.length)];
+
+  const difficulties = Object.keys(songsData[songId]) as Difficulty[];
+  const difficulty = difficulties[Math.floor(Math.random() * difficulties.length)];
+
+  return [songId, difficulty];
 }
 
 export async function getRandomSongJacket(size: number): Promise<{
   jacket: Buffer;
+  id: string;
   title: string;
   originalJacket: Buffer;
   left: number;
@@ -46,9 +57,11 @@ export async function getRandomSongJacket(size: number): Promise<{
   width: number;
   height: number;
 }> {
-  const [title, diff] = getRandomSongName();
+  const [id, diff] = getRandomSongId();
 
-  const originalJacket = await getSongJacket(title, diff);
+  const originalJacket = await getSongJacket(id, diff);
+
+  const title = songsData[id][diff].title;
 
   const temp = sharp(originalJacket);
   const metadata = await temp.metadata();
@@ -72,6 +85,7 @@ export async function getRandomSongJacket(size: number): Promise<{
 
   return {
     jacket: jacket,
+    id: id,
     title: title,
     originalJacket: originalJacket,
     left: left,
