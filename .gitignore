@@ -5,3 +5,4 @@ src/cache/*/*
 src/data.json
 
 !src/cache/lol/maps.json
+!src/cache/arcaea/README.md

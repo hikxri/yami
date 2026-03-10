@@ -5,8 +5,9 @@ import {
   EmbedBuilder,
   SlashCommandBuilder,
 } from "discord.js";
+import { getSongJacket, songNames, songsData } from "../lib/arcaea/get";
+import type { Difficulty } from "../lib/arcaea/types";
 import sharp from "sharp";
-import { songNames, songsData } from "../lib/arcaea/get";
 
 export const data = new SlashCommandBuilder()
   .setName("arcaea-archive")
@@ -74,5 +75,101 @@ export async function autocomplete(interaction: AutocompleteInteraction) {
 }
 
 export async function execute(interaction: ChatInputCommandInteraction) {
-  await interaction.reply("boop beep test");
+  await interaction.deferReply();
+  const subcommand = interaction.options.getSubcommand();
+  if (subcommand === "chart") {
+    const title = interaction.options.getString("title", true);
+    const difficulty = (interaction.options.getString("difficulty", false) || "FTR") as Difficulty;
+
+    const { embed, jacket } = await createChartEmbed(title, difficulty);
+    return await interaction.editReply({ embeds: [embed], files: [jacket] });
+  }
+
+  await interaction.editReply("boop beep test");
+}
+
+type ChartEmbed = {
+  embed: EmbedBuilder;
+  jacket: AttachmentBuilder;
+}
+
+async function createChartEmbed(id: string, difficulty: Difficulty): Promise<ChartEmbed> {
+  const songInfo = songsData[id][difficulty];
+  const jacket = await getSongJacket(id, difficulty);
+
+  if (!songInfo) throw new Error(`Song: ${id} | ${difficulty} not found in data!`);
+
+  const { title, artist, pack, level, cc, notes, background, designer, bpm, side, illustrator, length, date, vocals, url } = songInfo;
+  const file = new AttachmentBuilder(
+    await sharp(jacket).resize(128, 128).toBuffer(),
+    { name: "image.png" },
+  );
+
+  const formattedDate = date.replace(/(?<=.)(?=Version)/g, '\n');
+
+  const embed = new EmbedBuilder()
+    .setAuthor({
+      name: pack,
+    })
+    .setTitle(`(${difficulty}) ${title}`)
+    // .setURL("https://arcaea.fandom.com/wiki/" + url)
+    .setDescription(
+      `**${artist}**
+      (Vocals: ${vocals})
+      
+      ${formattedDate}
+      `)
+    .addFields(
+      {
+        name: "Level",
+        value: level,
+        inline: true
+      },
+      {
+        name: "Chart constant",
+        value: cc,
+        inline: true
+      },
+      {
+        name: "Note count",
+        value: notes,
+        inline: true
+      },
+      {
+        name: "Chart design",
+        value: designer,
+        inline: true
+      },
+      {
+        name: "Artwork",
+        value: illustrator,
+        inline: true
+      },
+      {
+        name: "BPM",
+        value: bpm,
+        inline: true
+      },
+      {
+        name: "Background",
+        value: background,
+        inline: true
+      },
+      {
+        name: "Side",
+        value: side,
+        inline: true
+      },
+      {
+        name: "Length",
+        value: length,
+        inline: true
+      },
+    )
+    .setThumbnail("attachment://image.png")
+    .setFooter({
+      text: "Source: https://arcaea.fandom.com/wiki/" + url,
+    });
+
+  return { embed, jacket: file };
 }
