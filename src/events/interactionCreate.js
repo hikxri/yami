@@ -1,6 +1,7 @@
 import { MessageFlags, Events } from "discord.js";
 import { getDataFile } from "../lib/data";
 import { log, logError } from "../lib/log";
+import { createChartDiffEmbed } from "../lib/archive/arcaea/chart";
 
 export const name = Events.InteractionCreate;
 export const on = true;
@@ -86,6 +87,27 @@ export async function execute(interaction) {
         );
       }
       return;
+    }
+  } else if (interaction.isButton()) {
+    log(
+      `${interaction.user.username} - ${
+        interaction.guild?.name || "Direct Message"
+      }: Button clicked: ${interaction.customId}`,
+    );
+
+    await interaction.deferUpdate();
+    const args = interaction.customId.split("&");
+
+    if (args[0] === "chart-show-more") {
+      const title = args[1];
+      const difficulty = args[2];
+
+      const { embed, jacket } = await createChartDiffEmbed(title, difficulty, true);
+
+      await interaction.editReply({
+        embeds: [embed],
+        files: [jacket],
+      });
     }
   }
   return;
