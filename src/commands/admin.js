@@ -51,6 +51,10 @@ export async function execute(interaction) {
     client.channels
     .fetch(channel)
     .then((c) => c.send(message));
+    await interaction.reply({
+      content: `message sent to <#${channel}>`,
+      flags: MessageFlags.Ephemeral,
+    });
   }
 
   await interaction.reply({
