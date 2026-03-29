@@ -209,7 +209,7 @@ export async function getRandomItem(): Promise<RandomItem> {
 export type RandomSkin = {
   champion: string;
   skin: string;
-  set: string;
+  set: string[];
   originalSplash: Buffer;
   splash: Buffer;
   left: number;
@@ -218,7 +218,7 @@ export type RandomSkin = {
   height: number;
 };
 
-export async function getRandomSkin(): Promise<RandomSkin> {
+export async function getRandomSkin(initialSize: number): Promise<RandomSkin> {
   const characterName = characterList[Math.floor(Math.random() * characterList.length)];
   const characterData = await getCharacterInfo(characterName);
 
@@ -245,8 +245,8 @@ export async function getRandomSkin(): Promise<RandomSkin> {
   const mHeight = metadata.height || 720;
   const xPadding = 200;
   const yPadding = 100;
-  const width = 256;
-  const height = 256;
+  const width = initialSize;
+  const height = initialSize;
   const left = Math.floor(Math.random() * (mWidth - width - xPadding * 2) + xPadding);
   const top = Math.floor(Math.random() * (mHeight - height - yPadding * 2) + yPadding);
   const splash = await temp

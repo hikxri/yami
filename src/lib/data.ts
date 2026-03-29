@@ -1,6 +1,7 @@
 import path from "path";
 import fs from "fs";
 import { log } from "./log";
+import type { GuildGameSettings, SplashGames, SplashGameSettings } from "./games/types";
 
 export type Data = {
   testing: boolean;
@@ -12,19 +13,6 @@ export type Data = {
     number: number;
   }[];
   game_settings: GuildGameSettings[];
-};
-
-export type SplashGames = "arcaea-jacket" | "lol-skin";
-
-export type GuildGameSettings = {
-  guild_id: string;
-} & Partial<Record<SplashGames, SplashGameSettings>>;
-
-export type SplashGameSettings = {
-  initial_size: number;
-  size_increase: number;
-  auto_hint: boolean;
-  auto_hint_interval: number;
 };
 
 const defaultSplashGameSettings: Record<SplashGames, SplashGameSettings> = {
@@ -60,9 +48,9 @@ export function writeDataFile(data: Data): void {
   log("data.json updated");
 }
 
-export function getGuildGameSettings(guildId: string, game: SplashGames): SplashGameSettings | undefined {
+export function getGuildGameSettings(guildId: string, game: SplashGames): SplashGameSettings {
   const data = getDataFile();
-  return data.game_settings.find((g) => g.guild_id == guildId)?.[game];
+  return data.game_settings.find((g) => g.guild_id === guildId)?.[game] ?? defaultSplashGameSettings[game];
 }
 
 export function setGuildGameSettings(
