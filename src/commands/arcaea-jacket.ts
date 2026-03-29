@@ -1,7 +1,6 @@
 import {
   AttachmentBuilder,
   ChatInputCommandInteraction,
-  Embed,
   EmbedBuilder,
   Message,
   MessageFlags,
