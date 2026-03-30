@@ -1,7 +1,15 @@
 import path from "path";
 import fs from "fs";
 import { log } from "./log";
-import type { GuildGameSettings, SplashGames, SplashGameSettings } from "./games/types";
+import type {
+  Games,
+  GameSettingsMap,
+  GuildGameSettings,
+  IconGames,
+  IconGameSettings,
+  SplashGames,
+  SplashGameSettings,
+} from "./games/types";
 
 export type Data = {
   testing: boolean;
@@ -20,7 +28,7 @@ const defaultSplashGameSettings: Record<SplashGames, SplashGameSettings> = {
     initial_size: 64,
     size_increase: 32,
     auto_hint: true,
-    auto_hint_interval: 5,
+    auto_hint_interval: 3,
   },
   "lol-skin": {
     initial_size: 128,
@@ -30,11 +38,36 @@ const defaultSplashGameSettings: Record<SplashGames, SplashGameSettings> = {
   },
 };
 
+const defaultIconGameSettings: Record<IconGames, IconGameSettings> = {
+  "lol-ability": {
+    auto_hint: true,
+    auto_hint_interval: 3,
+    image_settings: {
+      blur: true,
+      blur_amount: 7,
+      grayscale: true,
+    },
+  },
+  "lol-item": {
+    auto_hint: true,
+    auto_hint_interval: 3,
+    image_settings: {
+      blur: true,
+      blur_amount: 7,
+      grayscale: true,
+    },
+  },
+};
+
+const defaultGameSettings: GameSettingsMap = { ...defaultSplashGameSettings, ...defaultIconGameSettings };
+
 export const splashGames = Object.keys(defaultSplashGameSettings) as SplashGames[];
-export const splashGameSettings = Object.keys(defaultSplashGameSettings[splashGames[0]]) as (keyof SplashGameSettings)[];
+export const splashGameSettings = Object.keys(
+  defaultSplashGameSettings[splashGames[0]],
+) as (keyof SplashGameSettings)[];
 
 export function getDataFile(): Data {
-  const dataPath = path.join(__dirname, "..", "data.json"); 
+  const dataPath = path.join(__dirname, "..", "data.json");
   const dataFile = fs.readFileSync(dataPath, "utf8");
   const dataJson = JSON.parse(dataFile);
 
@@ -48,16 +81,17 @@ export function writeDataFile(data: Data): void {
   log("data.json updated");
 }
 
-export function getGuildGameSettings(guildId: string, game: SplashGames): SplashGameSettings {
+export function getGuildGameSettings<G extends Games>(guildId: string, game: G): GameSettingsMap[G] {
   const data = getDataFile();
-  return data.game_settings.find((g) => g.guild_id === guildId)?.[game] ?? defaultSplashGameSettings[game];
+  return (data.game_settings.find((g) => g.guild_id === guildId)?.[game] ??
+    defaultGameSettings[game]) as GameSettingsMap[G];
 }
 
 export function setGuildGameSettings(
   guildId: string,
   game: SplashGames,
   setting: keyof SplashGameSettings,
-  value: any
+  value: any,
 ): void {
   const data = getDataFile();
 
@@ -74,7 +108,7 @@ export function setGuildGameSettings(
   data.game_settings[index][game] = {
     ...data.game_settings[index][game],
     [setting]: value,
-  }
+  };
 
   writeDataFile(data);
 }

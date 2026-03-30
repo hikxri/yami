@@ -68,3 +68,16 @@ export async function enlargeSplash(
     size: size,
   };
 }
+
+export type ModifyImageSettings = {
+  blur: boolean;
+  blur_amount: number;
+  grayscale: boolean;
+};
+
+export async function modifyImage(original: Buffer, settings: ModifyImageSettings): Promise<Buffer> {
+  const image = sharp(original);
+  if (settings.blur) image.blur(settings.blur_amount);
+  if (settings.grayscale) image.grayscale();
+  return image.toBuffer();
+}

@@ -183,7 +183,6 @@ export async function getRandomAbility(): Promise<RandomAbility> {
 export type RandomItem = {
   name: string;
   icon: Buffer;
-  originalIcon: Buffer;
 };
 
 export async function getRandomItem(): Promise<RandomItem> {
@@ -197,12 +196,10 @@ export async function getRandomItem(): Promise<RandomItem> {
   }
 
   const buffer = await sharp(itemIcon).resize(128, 128).toBuffer();
-  const output = await sharp(buffer).blur(7).greyscale().toBuffer();
 
   return {
     name: itemNames[itemId],
-    icon: output,
-    originalIcon: buffer,
+    icon: buffer,
   };
 }
 
