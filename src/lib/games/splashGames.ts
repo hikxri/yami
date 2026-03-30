@@ -91,19 +91,18 @@ export async function runSplashGame(
       }
       if (msg.includes("hint") && msg.startsWith("hint")) {
         await replyWithHint(1);
+        return;
       }
       // --- check answer ---
       if (result === "correct") {
-        message.react("✅");
+        await message.react("✅");
         winner = message.author;
         collector.stop("correct answer");
-      } else if (result === "partial") {
-        answerCount++;
-        message.react("🟨");
       } else {
+        await message.react(result === "partial" ? "🟨" : "❌");
         answerCount++;
-        message.react("❌");
-        if (settings.auto_hint && answerCount % settings.auto_hint_interval === 0 && answerCount > 0) {
+        if (settings.auto_hint && answerCount % settings.auto_hint_interval === 0) {
+          console.log(`${answerCount}: ${message.content}`);
           await replyWithHint(1);
         }
       }
