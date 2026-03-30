@@ -1,4 +1,4 @@
-import { SlashCommandBuilder } from "discord.js";
+import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 import "dotenv/config";
 import { getShorthandFile } from "../lib/lol/shorthand";
 
@@ -8,7 +8,7 @@ export const data = new SlashCommandBuilder()
     "view all shorthand writings for league of legends champion names",
   );
 
-export async function execute(interaction) {
+export async function execute(interaction: ChatInputCommandInteraction) {
   const shorthand = Object.entries(getShorthandFile()).filter(
     ([, value]) => value.length,
   );

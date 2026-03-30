@@ -1,5 +1,7 @@
 import {
   AttachmentBuilder,
+  AutocompleteInteraction,
+  ChatInputCommandInteraction,
   EmbedBuilder,
   SlashCommandBuilder,
 } from "discord.js";
@@ -64,20 +66,18 @@ export const data = new SlashCommandBuilder()
       ),
   );
 
-export async function autocomplete(interaction) {
+export async function autocomplete(interaction: AutocompleteInteraction) {
   const subcommand = interaction.options.getSubcommand();
   const focus = interaction.options.getFocused(true);
   const text = focus.value.toLowerCase();
 
   if (subcommand === "ability") {
-    let filtered = characterNames;
-    filtered = Object.entries(characterNames).filter(([, name]) =>
+    const filtered = Object.entries(characterNames).filter(([, name]) =>
       name.toLowerCase().includes(text),
     );
-    filtered = filtered.map(([key, name]) => ({ name: name, value: key }));
-    filtered = filtered.slice(0, 25);
+    const filteredOptions = filtered.map(([key, name]) => ({ name: name, value: key }));
 
-    await interaction.respond(filtered);
+    await interaction.respond(filteredOptions.slice(0, 25));
   }
 
   if (subcommand === "item") {
@@ -85,39 +85,42 @@ export async function autocomplete(interaction) {
       if (!text) {
         return await interaction.respond([]);
       }
-      let filtered = [...itemNamesSet].filter(
-        // ignore funny xml names
-        (name) => name.toLowerCase().includes(text) && !name.includes("<"),
+      const filtered = [...itemNamesSet].filter(
+        (name) => name.toLowerCase().includes(text) && !name.includes("<"), // ignore funny xml names
       );
-      filtered = filtered.map((name) => ({ name: name, value: name }));
+      const filteredOptions = filtered.map((name) => ({ name: name, value: name }));
 
-      filtered.sort((a, b) => a.name.localeCompare(b.name));
+      filteredOptions.sort((a, b) => a.name.localeCompare(b.name));
 
-      filtered = filtered.slice(0, 25);
-
-      await interaction.respond(filtered);
+      await interaction.respond(filteredOptions.slice(0, 25));
     }
 
     if (focus.name === "map") {
       const itemName = interaction.options.getString("name", false);
-      let mapChoices = [];
+      if (!itemName) {
+        await interaction.respond([]);
+        return;
+      }
+
       if (itemMaps[itemName]) {
         console.log(itemMaps[itemName], maps[itemMaps[itemName][0].map]);
-        mapChoices = itemMaps[itemName].map((item) => ({
+        const mapChoices = itemMaps[itemName].map((item) => ({
           name: maps[item.map] || "Unknown",
           value: item.id,
         }));
+        await interaction.respond(mapChoices);
+        return;
       }
 
-      await interaction.respond(mapChoices);
+      await interaction.respond([]);
     }
   }
 }
 
-export async function execute(interaction) {
+export async function execute(interaction: ChatInputCommandInteraction) {
   const subcommand = interaction.options.getSubcommand();
   const name = interaction.options.getString("name", true);
-  let embed, file;
+  let embed: EmbedBuilder | undefined, file: AttachmentBuilder | undefined;
   if (subcommand === "ability") {
     const key = interaction.options.getString("key");
     if (key) {
@@ -140,18 +143,18 @@ export async function execute(interaction) {
   }
 
   await interaction.reply({
-    content: embed ? null : name,
-    embeds: embed ? [embed] : null,
-    files: file ? [file] : null,
+    content: embed ? "" : name,
+    embeds: embed ? [embed] : undefined,
+    files: file ? [file] : undefined,
   });
 }
 
-async function createAbilityEmbed(championName, key) {
+async function createAbilityEmbed(championName: string, key: string): Promise<[EmbedBuilder, AttachmentBuilder]> {
   const { name, cost, cooldown, damageType, spellEffect, description } =
     await getAbilityInfo(championName, key);
   const abilityIcon = await getAbilityIcon(championName, key);
   const file = new AttachmentBuilder(
-    await sharp(abilityIcon).resize(128, 128).toBuffer(),
+    await sharp(abilityIcon ?? Buffer.alloc(128)).resize(128, 128).toBuffer(),
     { name: "image.png" },
   );
 
@@ -175,11 +178,11 @@ async function createAbilityEmbed(championName, key) {
   return [embed, file];
 }
 
-async function createItemEmbed(id, name) {
+async function createItemEmbed(id: string, name: string): Promise<[EmbedBuilder, AttachmentBuilder]> {
   const res = await getItemInfo(id);
   const icon = await getItemIcon(id);
   const file = new AttachmentBuilder(
-    await sharp(icon).resize(128, 128).toBuffer(),
+    await sharp(icon ?? Buffer.alloc(128)).resize(128, 128).toBuffer(),
     { name: "image.png" },
   );
   const { stats, other, map } = res;

@@ -2,7 +2,7 @@ import path from "path";
 import fs from "fs";
 import { log } from "./log";
 
-export function loadCacheData(filePath) {
+export function loadCacheData(filePath: string): any {
   const cachePath = path.join(__dirname, "..", "cache", filePath);
   if (!fs.existsSync(cachePath)) return null;
   const cacheFile = fs.readFileSync(cachePath, "utf8");
@@ -13,7 +13,7 @@ export function loadCacheData(filePath) {
   return cacheJson;
 }
 
-export function loadCacheImage(filePath) {
+export function loadCacheImage(filePath: string): Buffer | null {
   const cachePath = path.join(__dirname, "..", "cache", filePath);
   if (!fs.existsSync(cachePath)) return null;
   const cacheFile = fs.readFileSync(cachePath);
@@ -23,7 +23,7 @@ export function loadCacheImage(filePath) {
   return cacheFile;
 }
 
-export function writeCacheData(filePath, data) {
+export function writeCacheData(filePath: string, data: any): void {
   const cachePath = path.join(__dirname, "..", "cache", filePath);
 
   // create dir if not exist
@@ -35,7 +35,7 @@ export function writeCacheData(filePath, data) {
   log(`Cache at ${filePath} is updated`);
 }
 
-export function writeCacheImage(filePath, buffer) {
+export function writeCacheImage(filePath: string, buffer: Buffer): void {
   const cachePath = path.join(__dirname, "..", "cache", filePath);
 
   // create dir if not exist

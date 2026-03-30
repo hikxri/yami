@@ -1,7 +1,8 @@
-import { REST, Routes } from "discord.js";
+import { REST, Routes, type APIApplicationCommand } from "discord.js";
 import "dotenv/config";
 import fs from "fs";
 import path from "path";
+import { getEnv } from "./lib/env";
 
 const commands = [];
 const GUILD_ONLY = true;
@@ -24,7 +25,7 @@ for (const file of commandFiles) {
   }
 }
 
-const rest = new REST().setToken(process.env.TOKEN);
+const rest = new REST().setToken(getEnv("TOKEN"));
 
 (async () => {
   try {
@@ -35,12 +36,12 @@ const rest = new REST().setToken(process.env.TOKEN);
     const data = await rest.put(
       GUILD_ONLY
         ? Routes.applicationGuildCommands(
-          process.env.CLIENT_ID,
-          process.env.GUILD_ID,
+          getEnv("CLIENT_ID"),
+          getEnv("GUILD_ID"),
         )
-        : Routes.applicationCommands(process.env.CLIENT_ID),
+        : Routes.applicationCommands(getEnv("CLIENT_ID")),
       { body: commands },
-    );
+    ) as APIApplicationCommand[];
 
     console.log(
       `Registered ${data.length} slash commands: ${data.map(

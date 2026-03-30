@@ -1,4 +1,4 @@
-import { MessageFlags, SlashCommandBuilder } from "discord.js";
+import { AutocompleteInteraction, ChatInputCommandInteraction, MessageFlags, SlashCommandBuilder } from "discord.js";
 import { currencies, currencyChoices, convert } from "../lib/currency";
 
 export const data = new SlashCommandBuilder()
@@ -25,7 +25,7 @@ export const data = new SlashCommandBuilder()
       .setAutocomplete(true),
   );
 
-export async function autocomplete(interaction) {
+export async function autocomplete(interaction: AutocompleteInteraction) {
   const focus = interaction.options.getFocused(true);
   const text = focus.value.toLowerCase();
 
@@ -44,12 +44,18 @@ export async function autocomplete(interaction) {
   await interaction.respond(filtered);
 }
 
-export async function execute(interaction) {
+export async function execute(interaction: ChatInputCommandInteraction) {
   const value = interaction.options.getNumber("value");
   const fromCurrency = interaction.options.getString("from");
   const toCurrency = interaction.options.getString("to") || "USD";
 
-  // console.log("convert", value, fromCurrency, toCurrency);
+  if (!value || !fromCurrency) {
+    await interaction.reply({
+      content: "invalid input!",
+      flags: MessageFlags.Ephemeral,
+    });
+    return;
+  }
 
   const converted = convert(value, fromCurrency, toCurrency);
 
@@ -67,7 +73,7 @@ export async function execute(interaction) {
     `${new Intl.NumberFormat().format(value)} ${
       currencies[fromCurrency.toLowerCase()]
     } (${fromCurrency.toUpperCase()}) is ${new Intl.NumberFormat().format(
-      toValue.toFixed(2),
+      parseFloat(toValue.toFixed(2)),
     )} ${currencies[toCurrency.toLowerCase()]} (${toCurrency.toUpperCase()})
 -# as of ${new Date(date).toLocaleDateString()}`,
   );

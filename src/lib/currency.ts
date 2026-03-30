@@ -1,7 +1,13 @@
 import { loadCacheData, writeCacheData } from "./cache";
 import { log } from "./log";
 
-let currenciesData, ratesData;
+type RatesData = {
+  date: string;
+  eur: Record<string, number>;
+};
+
+let currenciesData: Record<string, string>;
+let ratesData: RatesData;
 const data = loadCacheData("exchange/exchange.json");
 currenciesData = data?.currenciesData;
 ratesData = data?.ratesData;
@@ -35,7 +41,7 @@ export const currencyChoices = Object.entries(currenciesData).map(
   },
 );
 
-export function convert(value, from, to) {
+export function convert(value: number, from: string, to: string) {
   if (
     currenciesData[from.toLowerCase()] === undefined ||
     currenciesData[to.toLowerCase()] === undefined

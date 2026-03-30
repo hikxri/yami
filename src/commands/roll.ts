@@ -1,4 +1,4 @@
-import { SlashCommandBuilder } from "discord.js";
+import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
 
 export const data = new SlashCommandBuilder()
   .setName("roll")
@@ -10,7 +10,7 @@ export const data = new SlashCommandBuilder()
       .setRequired(false),
   );
 
-export async function execute(interaction) {
+export async function execute(interaction: ChatInputCommandInteraction) {
   const limit = interaction.options.getInteger("limit") || 100;
   const randomNumber = Math.ceil(Math.random() * limit);
   await interaction.reply(`<@${interaction.user.id}> rolled a ${randomNumber}!\n-# (out of ${limit})`);

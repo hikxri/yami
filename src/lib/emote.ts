@@ -1,4 +1,4 @@
-export const customEmotes = {
+export const customEmotes: Record<string, string> = {
   air: "1344565040166211615",
   abilitypower: "1344138023813513248",
   adaptiveforce: "1344153032048377966",
@@ -39,6 +39,6 @@ export const customEmotes = {
   tenacity: "1344138991527661609",
 };
 
-export function getEmote(name) {
+export function getEmote(name: string): string {
   return `<:${name}:${customEmotes[name]}>`;
 }
