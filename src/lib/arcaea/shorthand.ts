@@ -1,7 +1,7 @@
 import path from "path";
 import fs from "fs";
 
-export function getShorthandFile(): Record<string, string> {
+export function getShorthandFile(): Record<string, string[]> {
   const dataPath = path.join(__dirname, ".", "shorthand.json");
   const dataFile = fs.readFileSync(dataPath, "utf8");
   const dataJson = JSON.parse(dataFile);

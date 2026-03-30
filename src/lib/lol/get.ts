@@ -33,7 +33,7 @@ const itemsData = loadCacheData(`lol/${latestVersion}/items/items.json`);
 let itemList: string[],
   itemNames: Record<string, string>,
   itemNamesSet: string[],
-  itemMaps: Record<string, string>,
+  itemMaps: Record<string, Record<string, string>[]>,
   items: Record<string, any>;
 
 if (!itemsData) {
