@@ -41,7 +41,7 @@ const defaultSplashGameSettings: Record<SplashGames, SplashGameSettings> = {
 const defaultIconGameSettings: Record<IconGames, IconGameSettings> = {
   "lol-ability": {
     auto_hint: true,
-    auto_hint_interval: 3,
+    auto_hint_interval: 5,
     image_settings: {
       blur: true,
       blur_amount: 7,
@@ -83,8 +83,11 @@ export function writeDataFile(data: Data): void {
 
 export function getGuildGameSettings<G extends Games>(guildId: string, game: G): GameSettingsMap[G] {
   const data = getDataFile();
-  return (data.game_settings.find((g) => g.guild_id === guildId)?.[game] ??
-    defaultGameSettings[game]) as GameSettingsMap[G];
+  const gameSettings = data.game_settings.find((g) => g.guild_id === guildId)?.[game];
+  
+  if (!gameSettings) initializeGuildGameSettings(guildId);
+
+  return (gameSettings || defaultGameSettings[game]) as GameSettingsMap[G];
 }
 
 export function setGuildGameSettings(
@@ -111,4 +114,15 @@ export function setGuildGameSettings(
   };
 
   writeDataFile(data);
+}
+
+export function initializeGuildGameSettings(guildId: string): void {
+  const data = getDataFile();
+  if (!data.game_settings.find((g) => g.guild_id == guildId)) {
+    data.game_settings.push({ guild_id: guildId, ...defaultGameSettings });
+    writeDataFile(data);
+    log(`Guild ${guildId} game settings initialized`);
+    return;
+  }
+  log(`Guild ${guildId} game settings already initialized`);
 }

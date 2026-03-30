@@ -140,7 +140,6 @@ export type RandomAbility = {
   name: string;
   champion: string;
   icon: Buffer;
-  originalIcon: Buffer;
 };
 
 export async function getRandomAbility(): Promise<RandomAbility> {
@@ -169,14 +168,12 @@ export async function getRandomAbility(): Promise<RandomAbility> {
   }
 
   const buffer = await sharp(spellIcon).resize(128, 128).toBuffer();
-  const output = await sharp(buffer).blur(7).greyscale().toBuffer();
 
   return {
     key: key,
     name: abilities[key].name,
     champion: characterNames[characterName],
-    icon: output,
-    originalIcon: buffer,
+    icon: buffer,
   };
 }
 

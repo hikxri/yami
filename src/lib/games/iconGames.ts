@@ -122,10 +122,10 @@ export async function runIconGame(
     if (!interaction.channel || interaction.channel instanceof PartialGroupDMChannel) return;
 
     const endMessages: Record<string, string> = {
-      limit: `no one got the correct answer! the answer was: ${name}\n-# game id: ${uuid}`,
-      "manual end": `game ended. the answer was: ${name}\n-# game id: ${uuid}`,
+      limit: `no one got the correct answer! the answer was: \`${name}\`\n-# game id: ${uuid}`,
+      "manual end": `game ended. the answer was: \`${name}\`\n-# game id: ${uuid}`,
       "correct answer": winner
-        ? `<@${winner.id}> won! the answer was: ${name}\n-# game id: ${uuid}`
+        ? `<@${winner.id}> won! the answer was: \`${name}\`\n-# game id: ${uuid}`
         : `no one won? hikari fix your bot\n-# game id: ${uuid}`,
     };
     await interaction.channel.send({
