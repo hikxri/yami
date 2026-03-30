@@ -1,21 +1,13 @@
-import { SlashCommandBuilder, MessageFlags } from "discord.js";
-import { getDataFile, writeDataFile } from "../lib/data";
+import { SlashCommandBuilder, MessageFlags, ChatInputCommandInteraction, PartialGroupDMChannel } from "discord.js";
+import { getDataFile, writeDataFile, type Data } from "../lib/data";
 
 export const data = new SlashCommandBuilder()
   .setName("admin")
   .setDescription("hikari only")
-  .addStringOption((option) =>
-    option
-      .setName("command")
-      .setDescription("command name")
-      .setRequired(true),
-  ).addStringOption((option) =>
-    option
-      .setName("args")
-      .setDescription("arguments"),
-  );
+  .addStringOption((option) => option.setName("command").setDescription("command name").setRequired(true))
+  .addStringOption((option) => option.setName("args").setDescription("arguments"));
 
-export async function execute(interaction) {
+export async function execute(interaction: ChatInputCommandInteraction) {
   if (interaction.user.id !== process.env.OWNER_ID) {
     await interaction.reply({
       content: "you don't have permission to use this command!",
@@ -41,6 +33,13 @@ export async function execute(interaction) {
     return;
   }
   if (command === "reset") {
+    if (!interaction.channel) {
+      await interaction.reply({
+        content: "this command can only be used in a channel!",
+        flags: MessageFlags.Ephemeral,
+      });
+      return;
+    }
     global.gameOngoing[interaction.channel.id] = false;
     await interaction.reply(`\`gameOngoing\` of <#${interaction.channel.id}> is resetted to \`false\``);
     return;
@@ -48,9 +47,19 @@ export async function execute(interaction) {
   if (command === "say" && args) {
     const [channel, message] = args.split(/ (.*)/s);
     const client = interaction.client;
-    client.channels
-    .fetch(channel)
-    .then((c) => c.send(message));
+
+    const c = await client.channels.fetch(channel);
+
+    if (c?.isSendable()) {
+      await c.send(message);
+    } else {
+      await interaction.reply({
+        content: "channel is not sendable",
+        flags: MessageFlags.Ephemeral,
+      });
+      return;
+    }
+
     await interaction.reply({
       content: `message sent to <#${channel}>`,
       flags: MessageFlags.Ephemeral,
@@ -63,7 +72,7 @@ export async function execute(interaction) {
   });
 }
 
-function setData(key, value) {
+function setData(key: keyof Data, value: any): void {
   const cfg = getDataFile();
   cfg[key] = value;
   writeDataFile(cfg);
