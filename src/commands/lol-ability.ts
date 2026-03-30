@@ -46,6 +46,13 @@ const lolAbilityConfig: IconGameConfig = {
     };
   },
 
+  // note: this function is AI-generated:
+  /* prompt:
+   * "Make this function reveal the first hintCount letters of each word in name
+   * ONLY IF the word is longer than two letters. If not, leave as underscores.
+   * Only alphanumeric characters are counted. Non-alphanumeric characters are
+   * left as-is."
+   */
   getHint(name, hintCount) {
     return (
       "hint: `" +
