@@ -19,25 +19,28 @@
 
 ## TODO
 ### fixes
-- sometimes ❌ reactions are removed
+- ~~sometimes ❌ reactions are removed~~
 - ~~automatic hints are still sent after "end"~~
-- lol-archive ability "<champ> <skill>"
-- shorthand in lol-ability is broken
+- ~~lol-archive ability "<champ> <skill>"~~
+- ~~shorthand in lol-ability is broken~~
 - `O,` isn't working in `arcaea-jacket`
 
 ### features
-- react with question mark if unknown champion/item name
+- react with question mark if unknown champion/item name/chart name
 - ~~automatic hints for lol games~~
-  - toggle automatic hints from command
+- edit game settings from a command
 - ~~log error dump~~
 - leaderboard / stats
   - winrate (avg. number of tries)
   - game count
 - (admin) cache cleaning command
 - (admin) add shorthand command
-- arcaea archive
+- ~~arcaea archive~~
 - arcaea games
   - ~~guess the arcaea song jacket (zoomed in)~~
     - ~~after 5 guesses, it zooms out~~\
   - add "the answer was guessed in XXX seconds"
 - easter eggs
+- partial react for pack name in `arcaea-jacket`
+- red square showing initial crop state for splash games
+  - blue square showing last crop state? maybe. 
